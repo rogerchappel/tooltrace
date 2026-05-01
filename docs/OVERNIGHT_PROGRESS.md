@@ -34,7 +34,7 @@ Source of truth: `main` after fetching and fast-forwarding to merged Wave 1 PR.
 
 ### Wave 5: Quality review
 
-- `tooltrace-quality-review-release` — completed in commit `28b9802`.
+- `tooltrace-quality-review-release` — completed in commit `beed1d2`.
   - Ran local tests, build check, CLI demo summary inspection, and repository validation.
   - Product/accessibility review notes: UI exposes semantic sections/lists, keyboard-focusable groups/events, empty/approval/blocked/completed states, and concise summaries that avoid raw-log noise by grouping evidence.
 
