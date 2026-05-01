@@ -1,0 +1,239 @@
+{
+  "version": "0.1",
+  "source": "assistant-authored from PRD.md by Neo; designed as LLM-quality orchestration with explicit concurrency waves",
+  "workspace": "default",
+  "repository": "tooltrace",
+  "generated_by": "Neo",
+  "generated_at": "2026-05-01T06:59:13.596627+00:00",
+  "product_north_star": "Build a polished activity timeline and proof-of-work layer that turns agent tool/runtime events into something users can trust, review, and share without reading raw logs.",
+  "dispatch_now": [
+    "tooltrace-define-proof-information-architecture"
+  ],
+  "blocked_tasks": [
+    "tooltrace-quality-review-release"
+  ],
+  "refinement_notes": [
+    "This is not a log viewer. The wedge is human-readable proof: grouping, summarisation, evidence, and review mode.",
+    "Design the event model around review questions: what happened, what changed, what passed, what failed, what needs approval?",
+    "Core normalisation and React rendering can proceed in parallel after the product information architecture is set.",
+    "The summary generator should be good enough to paste into PRs or completion reports."
+  ],
+  "waves": [
+    {
+      "index": 1,
+      "name": "Proof information architecture",
+      "mode": "sequential",
+      "dispatch": "now",
+      "tasks": [
+        "tooltrace-define-proof-information-architecture"
+      ]
+    },
+    {
+      "index": 2,
+      "name": "Core and adapter foundations",
+      "mode": "concurrent",
+      "dispatch": "after_dependencies",
+      "tasks": [
+        "tooltrace-build-core-normalizer",
+        "tooltrace-agentpulse-jsonl-adapters"
+      ]
+    },
+    {
+      "index": 3,
+      "name": "UI, summaries, and CLI",
+      "mode": "concurrent",
+      "dispatch": "after_dependencies",
+      "tasks": [
+        "tooltrace-react-timeline-component",
+        "tooltrace-proof-summary-generator",
+        "tooltrace-cli-render-summary"
+      ]
+    },
+    {
+      "index": 4,
+      "name": "Demo and integration docs",
+      "mode": "concurrent",
+      "dispatch": "after_dependencies",
+      "tasks": [
+        "tooltrace-demo-crewcmd-run",
+        "tooltrace-docs-integration-recipes"
+      ]
+    },
+    {
+      "index": 5,
+      "name": "Quality review",
+      "mode": "sequential",
+      "dispatch": "after_human_decision",
+      "tasks": [
+        "tooltrace-quality-review-release"
+      ]
+    }
+  ],
+  "tasks": [
+    {
+      "id": "tooltrace-define-proof-information-architecture",
+      "title": "Define proof timeline information architecture",
+      "repo": "tooltrace",
+      "branch": "agent/define-proof-information-architecture",
+      "phase": "foundation",
+      "risk": "medium",
+      "depends_on": [],
+      "can_run_concurrently_with": [],
+      "dispatchable": true,
+      "blocked_by": [],
+      "objective": "Specify event categories, grouping rules, severity, evidence links, file/command/check metadata, redaction fields, and review-mode UX.",
+      "acceptance_criteria": "Architecture doc defines message, command, tool, file change, check, approval, error, retry, blocker, PR/commit, and completion proof semantics."
+    },
+    {
+      "id": "tooltrace-build-core-normalizer",
+      "title": "Build core event normalisation and grouping library",
+      "repo": "tooltrace",
+      "branch": "agent/build-core-normalizer",
+      "phase": "implementation",
+      "risk": "medium",
+      "depends_on": [
+        "tooltrace-define-proof-information-architecture"
+      ],
+      "can_run_concurrently_with": [
+        "tooltrace-agentpulse-jsonl-adapters"
+      ],
+      "dispatchable": false,
+      "blocked_by": [],
+      "objective": "Implement @tooltrace/core to normalize raw events, group related activity, collapse noise, preserve provenance, and expose timeline/query APIs.",
+      "acceptance_criteria": "Unit tests cover grouping, ordering, redaction, retries, blockers, file changes, commands, checks, and completion proof."
+    },
+    {
+      "id": "tooltrace-agentpulse-jsonl-adapters",
+      "title": "Build AgentPulse and generic JSONL adapters",
+      "repo": "tooltrace",
+      "branch": "agent/agentpulse-jsonl-adapters",
+      "phase": "integration",
+      "risk": "medium",
+      "depends_on": [
+        "tooltrace-define-proof-information-architecture"
+      ],
+      "can_run_concurrently_with": [
+        "tooltrace-build-core-normalizer"
+      ],
+      "dispatchable": false,
+      "blocked_by": [],
+      "objective": "Convert AgentPulse events and generic JSONL logs into ToolTrace events with safe defaults and source metadata.",
+      "acceptance_criteria": "Fixture tests cover tool calls, approvals, failures, browser actions, exec/process commands, commits, PR links, and subagent handoffs."
+    },
+    {
+      "id": "tooltrace-react-timeline-component",
+      "title": "Build React timeline component and review modes",
+      "repo": "tooltrace",
+      "branch": "agent/react-timeline-component",
+      "phase": "implementation",
+      "risk": "medium",
+      "depends_on": [
+        "tooltrace-define-proof-information-architecture"
+      ],
+      "can_run_concurrently_with": [
+        "tooltrace-proof-summary-generator",
+        "tooltrace-cli-render-summary"
+      ],
+      "dispatchable": false,
+      "blocked_by": [],
+      "objective": "Implement @tooltrace/react with compact live feed, grouped run summary, review/proof mode, filters, and accessible keyboard navigation.",
+      "acceptance_criteria": "Smoke/snapshot tests cover empty, live, grouped, error, blocked, approval, and completed states."
+    },
+    {
+      "id": "tooltrace-proof-summary-generator",
+      "title": "Build copyable proof summary generator",
+      "repo": "tooltrace",
+      "branch": "agent/proof-summary-generator",
+      "phase": "implementation",
+      "risk": "medium",
+      "depends_on": [
+        "tooltrace-build-core-normalizer"
+      ],
+      "can_run_concurrently_with": [
+        "tooltrace-react-timeline-component",
+        "tooltrace-cli-render-summary"
+      ],
+      "dispatchable": false,
+      "blocked_by": [],
+      "objective": "Create summaries that highlight commands, files, checks, PRs, blockers, decisions, and final verification in a human-readable format.",
+      "acceptance_criteria": "Snapshot tests generate PR-ready and Slack-ready summaries from realistic fixtures."
+    },
+    {
+      "id": "tooltrace-cli-render-summary",
+      "title": "Add CLI render and summary commands",
+      "repo": "tooltrace",
+      "branch": "agent/cli-render-summary",
+      "phase": "implementation",
+      "risk": "low",
+      "depends_on": [
+        "tooltrace-build-core-normalizer",
+        "tooltrace-proof-summary-generator"
+      ],
+      "can_run_concurrently_with": [
+        "tooltrace-react-timeline-component",
+        "tooltrace-proof-summary-generator"
+      ],
+      "dispatchable": false,
+      "blocked_by": [],
+      "objective": "Implement tooltrace render and tooltrace summary for local JSONL files, producing markdown output suitable for artifacts or review.",
+      "acceptance_criteria": "CLI tests verify input validation, markdown output, redaction, and useful errors."
+    },
+    {
+      "id": "tooltrace-demo-crewcmd-run",
+      "title": "Build simulated CrewCmd run demo",
+      "repo": "tooltrace",
+      "branch": "agent/demo-crewcmd-run",
+      "phase": "demo",
+      "risk": "medium",
+      "depends_on": [
+        "tooltrace-agentpulse-jsonl-adapters",
+        "tooltrace-react-timeline-component",
+        "tooltrace-proof-summary-generator"
+      ],
+      "can_run_concurrently_with": [
+        "tooltrace-docs-integration-recipes"
+      ],
+      "dispatchable": false,
+      "blocked_by": [],
+      "objective": "Create a demo showing a successful task with failure/retry, file changes, checks, approval, PR link, and final proof summary.",
+      "acceptance_criteria": "Demo is polished enough for screenshots and explains why ToolTrace is not raw logs."
+    },
+    {
+      "id": "tooltrace-docs-integration-recipes",
+      "title": "Write integration docs and review recipes",
+      "repo": "tooltrace",
+      "branch": "agent/docs-integration-recipes",
+      "phase": "documentation",
+      "risk": "low",
+      "depends_on": [
+        "tooltrace-demo-crewcmd-run",
+        "tooltrace-cli-render-summary"
+      ],
+      "can_run_concurrently_with": [
+        "tooltrace-demo-crewcmd-run"
+      ],
+      "dispatchable": false,
+      "blocked_by": [],
+      "objective": "Document React usage, core normalisation, AgentPulse adapter, JSONL format, proof summary recipes, privacy/redaction, and CrewCmd-style integration.",
+      "acceptance_criteria": "README helps a new agent UI embed useful proof-of-work in under an hour."
+    },
+    {
+      "id": "tooltrace-quality-review-release",
+      "title": "Quality review and release readiness",
+      "repo": "tooltrace",
+      "branch": "agent/quality-review-release",
+      "phase": "final_validation",
+      "risk": "high",
+      "depends_on": [
+        "tooltrace-docs-integration-recipes"
+      ],
+      "can_run_concurrently_with": [],
+      "dispatchable": false,
+      "blocked_by": [
+        "approve high-risk scope before dispatch"
+      ],
+      "objective": "Run tests, inspect demo, review accessibility, verify summaries, and ensure proof output is concise rather than noisy.",
+      "acceptance_criteria": "Human/product review confirms the component increases trust and does not overwhelm users."
+    }
+  ]
+}
