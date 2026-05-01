@@ -1,0 +1,10 @@
+{"timestamp":"2026-05-01T02:00:00Z","category":"message","title":"Accepted CrewCmd task","body":"Implement proof summary and validation gates","groupId":"plan"}
+{"timestamp":"2026-05-01T02:02:00Z","type":"exec","command":"git checkout -b agent/proof-summary","status":"success","exitCode":0,"groupId":"impl"}
+{"timestamp":"2026-05-01T02:05:00Z","category":"file_change","filePath":"src/index.js","operation":"modified","additions":220,"deletions":4,"groupId":"impl"}
+{"timestamp":"2026-05-01T02:08:00Z","type":"test","title":"node --test","status":"failed","exitCode":1,"body":"Snapshot expected command count 2, received 3","groupId":"validate"}
+{"timestamp":"2026-05-01T02:09:00Z","category":"retry","title":"Updated summary fixture after adding validation command","groupId":"recover"}
+{"timestamp":"2026-05-01T02:12:00Z","type":"test","title":"node --test","status":"passed","exitCode":0,"groupId":"validate"}
+{"timestamp":"2026-05-01T02:14:00Z","category":"approval","title":"Requested review for PR #42","body":"No deploy action taken; review only","groupId":"approval"}
+{"timestamp":"2026-05-01T02:16:00Z","type":"commit","title":"abc123 build proof summary generator","commit":"abc123","groupId":"review"}
+{"timestamp":"2026-05-01T02:17:00Z","type":"pull_request","title":"PR #42 proof timeline","pr":"https://github.com/example/tooltrace/pull/42","groupId":"review"}
+{"timestamp":"2026-05-01T02:18:00Z","category":"completion_proof","title":"Ready for human review","body":"Tests passed, summary generated, blockers none","groupId":"done"}
