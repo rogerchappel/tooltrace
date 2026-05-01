@@ -5,6 +5,7 @@ This directory holds project documentation.
 ## Contents
 
 - [Proof timeline information architecture](proof-information-architecture.md)
+- [Integration recipes](integration-recipes.md)
 - [Contributing guide](../CONTRIBUTING.md)
 - [Security policy](../SECURITY.md)
 - [Agent instructions](../AGENTS.md)
