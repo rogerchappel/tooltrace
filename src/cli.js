@@ -45,7 +45,10 @@ async function main() {
 
   const text = await readFile(file, 'utf8');
   const events = jsonlToToolTraceEvents(text, { includeRaw: false });
-  const output = command === 'summary' ? createProofSummary(events, { format }) : renderTimeline(events);
+  if (!['markdown', 'slack', 'json'].includes(format)) throw new Error(`Unsupported format: ${format}`);
+  const output = command === 'summary' && format === 'json'
+    ? `${JSON.stringify(createTimeline(events, { alreadyNormalized: true }), null, 2)}\n`
+    : command === 'summary' ? createProofSummary(events, { format }) : renderTimeline(events);
   if (out) await writeFile(out, output.endsWith('\n') ? output : `${output}\n`);
   else process.stdout.write(output.endsWith('\n') ? output : `${output}\n`);
 }
