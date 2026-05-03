@@ -1,5 +1,5 @@
 import React from 'react';
-import { createProofSummary, createTimeline } from './index.js';
+import { createProofSummary, createReviewChecklist, createTimeline } from './index.js';
 
 const toneClass = {
   info: 'tooltrace-event--info',
@@ -10,7 +10,7 @@ const toneClass = {
   approval: 'tooltrace-event--approval',
 };
 
-export function ToolTrace({ events = [], mode = 'compact', showProofSummary = false, filters = {}, onOpenFile }) {
+export function ToolTrace({ events = [], mode = 'compact', showProofSummary = false, showReviewChecklist = false, filters = {}, onOpenFile }) {
   const timeline = createTimeline(events, { includeRaw: false });
   const visibleGroups = timeline.groups
     .map((group) => ({
@@ -37,7 +37,16 @@ export function ToolTrace({ events = [], mode = 'compact', showProofSummary = fa
           React.createElement('div', { className: 'tooltrace-event__title' }, event.title),
           event.body ? React.createElement('p', { className: 'tooltrace-event__body' }, event.body) : null,
           event.file?.path && onOpenFile ? React.createElement('button', { type: 'button', onClick: () => onOpenFile(event.file.path) }, `Open ${event.file.path}`) : null))))),
+    showReviewChecklist ? React.createElement(ToolTraceReviewChecklist, { events: timeline }) : null,
     showProofSummary ? React.createElement('pre', { className: 'tooltrace-proof-summary' }, createProofSummary(timeline)) : null);
+}
+
+export function ToolTraceReviewChecklist({ events = [] }) {
+  const checklist = createReviewChecklist(events);
+  return React.createElement('ul', { className: 'tooltrace-review-checklist', 'aria-label': 'ToolTrace review checklist' },
+    checklist.map((item) => React.createElement('li', { key: item.id, 'data-passed': item.passed ? 'true' : 'false' },
+      `${item.passed ? '✓' : '•'} ${item.label}`)));
+}
 }
 
 export function ToolTraceProofSummary({ events = [], format = 'markdown' }) {
