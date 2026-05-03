@@ -46,4 +46,6 @@ test('CLI renders markdown and writes --out files', async () => {
   assert.match(stdout, /Commands/);
   await execFileAsync(process.execPath, ['src/cli.js', 'render', input, '--out', out], { cwd: new URL('..', import.meta.url) });
   assert.match(await readFile(out, 'utf8'), /ToolTrace timeline/);
+  const json = await execFileAsync(process.execPath, ['src/cli.js', 'summary', input, '--format', 'json'], { cwd: new URL('..', import.meta.url) });
+  assert.equal(JSON.parse(json.stdout).counts.command, 1);
 });
