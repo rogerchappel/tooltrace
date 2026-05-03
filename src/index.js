@@ -282,6 +282,23 @@ export function countTimelineEvents(events = []) {
   return counts;
 }
 
+
+export function createReviewChecklist(events = []) {
+  const timeline = Array.isArray(events) ? createTimeline(events) : events;
+  const normalized = timeline.events ?? [];
+  const checks = normalized.filter((event) => event.category === 'check');
+  const blockers = normalized.filter((event) => event.category === 'blocker' || event.severity === 'blocked');
+  const approvals = normalized.filter((event) => event.category === 'approval');
+  return [
+    { id: 'commands-reviewed', label: 'Commands are understandable', passed: normalized.some((event) => event.category === 'command') },
+    { id: 'files-reviewed', label: 'File changes are named', passed: normalized.some((event) => event.category === 'file_change') },
+    { id: 'checks-passed', label: 'Checks passed or failures are explained', passed: checks.length === 0 || checks.every((event) => event.severity === 'success' || event.check?.passed === true) },
+    { id: 'approvals-visible', label: 'Approval requests are visible', passed: approvals.every((event) => event.severity === 'approval' || event.status) },
+    { id: 'blockers-resolved', label: 'No unresolved blockers', passed: blockers.length === 0 },
+    { id: 'completion-proof', label: 'Completion proof is present', passed: normalized.some((event) => event.category === 'completion_proof') },
+  ];
+}
+
 export function createProofSummary(events = [], options = {}) {
   const timeline = Array.isArray(events) ? createTimeline(events, options) : events;
   const normalized = timeline.events ?? [];
