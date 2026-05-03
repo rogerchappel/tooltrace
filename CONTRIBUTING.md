@@ -77,3 +77,11 @@ If verification cannot be run, explain why and provide the exact command maintai
 ## Maintainer Review
 
 Maintainers may request narrower scope, clearer verification, additional tests, or safer defaults before merging.
+
+## Fixture-first changes
+
+When changing normalization, adapters, summaries, or CLI output, add or update a fixture in `tests/fixtures/` first. Fixtures should be redacted, local, and small enough to read in a review. Prefer one realistic event sequence over many synthetic one-liners.
+
+## Commit style
+
+Keep commits focused around one behavior, test, or document. ToolTrace is a proof-of-work project, so the history should be reviewable too.
