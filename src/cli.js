@@ -43,7 +43,13 @@ async function main() {
   if (!file) throw new Error('Missing JSONL input file');
   if (args.length) throw new Error(`Unexpected argument(s): ${args.join(' ')}`);
 
-  const text = await readFile(file, 'utf8');
+  const text = file === '-' ? await new Promise((resolve, reject) => {
+    let data = '';
+    process.stdin.setEncoding('utf8');
+    process.stdin.on('data', (chunk) => { data += chunk; });
+    process.stdin.on('end', () => resolve(data));
+    process.stdin.on('error', reject);
+  }) : await readFile(file, 'utf8');
   const events = jsonlToToolTraceEvents(text, { includeRaw: false });
   if (!['markdown', 'slack', 'json'].includes(format)) throw new Error(`Unsupported format: ${format}`);
   const output = command === 'summary' && format === 'json'
