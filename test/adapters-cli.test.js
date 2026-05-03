@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { execFile } from 'node:child_process';
+import { execFile, spawn } from 'node:child_process';
 import { mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -8,6 +8,22 @@ import { promisify } from 'node:util';
 import { agentPulseToToolTraceEvents, jsonlToToolTraceEvents, parseJsonl } from '../src/index.js';
 
 const execFileAsync = promisify(execFile);
+
+function runWithInput(command, args, input, options = {}) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(command, args, options);
+    let stdout = '';
+    let stderr = '';
+    child.stdout.on('data', (chunk) => { stdout += chunk; });
+    child.stderr.on('data', (chunk) => { stderr += chunk; });
+    child.on('error', reject);
+    child.on('close', (code) => {
+      if (code === 0) resolve({ stdout, stderr });
+      else reject(new Error(stderr || `process exited ${code}`));
+    });
+    child.stdin.end(input);
+  });
+}
 
 test('generic JSONL adapter maps commands, approvals, failures, browser actions, commits, PRs, and subagent handoffs', () => {
   const jsonl = [
@@ -48,6 +64,6 @@ test('CLI renders markdown and writes --out files', async () => {
   assert.match(await readFile(out, 'utf8'), /ToolTrace timeline/);
   const json = await execFileAsync(process.execPath, ['src/cli.js', 'summary', input, '--format', 'json'], { cwd: new URL('..', import.meta.url) });
   assert.equal(JSON.parse(json.stdout).counts.command, 1);
-  const piped = await execFileAsync(process.execPath, ['src/cli.js', 'summary', '-'], { cwd: new URL('..', import.meta.url), input: await readFile(input, 'utf8') });
+  const piped = await runWithInput(process.execPath, ['src/cli.js', 'summary', '-'], await readFile(input, 'utf8'), { cwd: new URL('..', import.meta.url) });
   assert.match(piped.stdout, /Commands/);
 });
