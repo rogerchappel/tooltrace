@@ -25,7 +25,8 @@
   "scripts": {
     "check": "node scripts/check-package.mjs",
     "test": "node --test",
-    "build": "node -e \"await import('./src/index.js')\" && node src/cli.js --help >/dev/null"
+    "build": "node -e \"await import('./src/index.js')\" && node src/cli.js --help >/dev/null",
+    "smoke": "bash scripts/smoke.sh"
   },
   "keywords": [
     "activity-feed",
