@@ -1,6 +1,15 @@
 # tooltrace
 
+Agent work should feel reviewable, not mysterious. `tooltrace` is the little flight recorder for agent apps: calm, readable, and built to show the receipts.
+
 A local-first activity timeline and proof-of-work layer for agent apps. ToolTrace turns raw runtime/tool events into a grouped review timeline, copyable proof summary, and embeddable React UI.
+
+## Why people reach for it
+
+- Turn noisy JSONL/tool logs into proof a human can scan.
+- Embed a polished React timeline without adopting a cloud observability stack.
+- Generate copyable completion summaries for PRs, handoffs, and incident notes.
+- Keep sensitive data local, redacted, and under your control.
 
 ## Install
 
@@ -8,7 +17,7 @@ A local-first activity timeline and proof-of-work layer for agent apps. ToolTrac
 npm install tooltrace
 ```
 
-React is an optional peer dependency for `tooltrace/react`.
+React is an optional peer dependency for `tooltrace/react`. Import `tooltrace/styles.css` if you want the default dark review timeline styling.
 
 ## Core usage
 
@@ -56,6 +65,12 @@ const fromJsonl = jsonlToToolTraceEvents(jsonlText);
 
 Adapters preserve source metadata, apply safe defaults, and redact common credentials/tokens before generating UI-ready proof.
 
+## Examples and fixtures
+
+- `examples/node-summary.mjs` renders a proof summary from a local JSONL file.
+- `examples/react-embed.jsx` shows a review panel with checklist and proof summary.
+- `tests/fixtures/` contains success, blocked, and AgentPulse-style fixtures.
+
 ## Demo
 
 `demo/crewcmd-run.jsonl` simulates a CrewCmd-style task with a failed check, retry, file change, approval, commit, PR link, and final proof summary.
@@ -64,6 +79,7 @@ Adapters preserve source metadata, apply safe defaults, and redact common creden
 
 - [Proof timeline information architecture](docs/proof-information-architecture.md)
 - [Integration recipes](docs/integration-recipes.md)
+- [Safety and privacy model](SAFETY.md)
 - [Contributing guide](CONTRIBUTING.md)
 - [Security policy](SECURITY.md)
 
