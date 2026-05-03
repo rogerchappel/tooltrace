@@ -1,0 +1,3 @@
+{"id":"plan","timestamp":"2026-05-01T10:00:00Z","type":"message","title":"Plan deployment proof","groupId":"planning"}
+{"id":"approval","timestamp":"2026-05-01T10:01:00Z","type":"approval_request","title":"Request production deploy approval","groupId":"approval","status":"pending_approval"}
+{"id":"blocker","timestamp":"2026-05-01T10:02:00Z","type":"blocker","title":"Missing CHANGELOG sign-off","body":"Release cannot continue until CHANGELOG is approved.","groupId":"blocked"}
