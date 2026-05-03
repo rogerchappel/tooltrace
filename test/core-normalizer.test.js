@@ -31,6 +31,7 @@ test('groups timeline activity and exposes query helpers', () => {
 
 test('generates concise proof summary', () => {
   const summary = createProofSummary(fixture);
+  assert.match(summary, /Shape/);
   assert.match(summary, /Commands/);
   assert.match(summary, /Files/);
   assert.match(summary, /Blockers/);
