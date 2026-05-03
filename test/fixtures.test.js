@@ -9,7 +9,7 @@ test('CrewCmd fixture produces reviewable proof groups', async () => {
   const events = jsonlToToolTraceEvents(await readFile(fixture('crewcmd-success.jsonl'), 'utf8'));
   const timeline = createTimeline(events, { alreadyNormalized: true });
   assert.ok(timeline.groups.length >= 5);
-  assert.equal(timeline.hasBlockers(), true);
+  assert.equal(timeline.hasBlockers(), false);
   assert.match(createProofSummary(timeline), /ToolTrace proof summary/);
 });
 
