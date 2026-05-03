@@ -23,6 +23,7 @@
     "src/styles.css"
   ],
   "scripts": {
+    "check": "node scripts/check-package.mjs",
     "test": "node --test",
     "build": "node -e \"await import('./src/index.js')\" && node src/cli.js --help >/dev/null"
   },
