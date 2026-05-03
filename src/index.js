@@ -255,6 +255,22 @@ export function createTimeline(events = [], options = {}) {
   };
 }
 
+export function collectTimelineEvidence(events = []) {
+  const timeline = Array.isArray(events) ? createTimeline(events) : events;
+  const seen = new Set();
+  const evidence = [];
+  for (const event of timeline.events ?? []) {
+    for (const item of event.evidence ?? []) {
+      const key = `${item.kind}:${item.path ?? item.href ?? item.sha ?? item.label}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        evidence.push({ ...item, eventId: event.id, eventTitle: event.title });
+      }
+    }
+  }
+  return evidence;
+}
+
 export function countTimelineEvents(events = []) {
   const counts = Object.fromEntries(TOOLTRACE_EVENT_CATEGORIES.map((category) => [category, 0]));
   for (const event of events) {
