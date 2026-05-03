@@ -248,10 +248,22 @@ export function createTimeline(events = [], options = {}) {
   return {
     events: normalized,
     groups: groupTimelineEvents(normalized, { ...options, alreadyNormalized: true }),
+    counts: countTimelineEvents(normalized),
     byCategory(category) { return normalized.filter((event) => event.category === category); },
     hasBlockers() { return normalized.some((event) => event.category === 'blocker' || event.severity === 'blocked'); },
     checksPassed() { return normalized.filter((event) => event.category === 'check').every((event) => event.severity === 'success' || event.check?.passed === true); },
   };
+}
+
+export function countTimelineEvents(events = []) {
+  const counts = Object.fromEntries(TOOLTRACE_EVENT_CATEGORIES.map((category) => [category, 0]));
+  for (const event of events) {
+    if (event?.category in counts) counts[event.category] += 1;
+  }
+  counts.total = events.length;
+  counts.blocking = events.filter((event) => event.category === 'blocker' || event.severity === 'blocked').length;
+  counts.needsApproval = events.filter((event) => event.category === 'approval' || event.severity === 'approval').length;
+  return counts;
 }
 
 export function createProofSummary(events = [], options = {}) {
