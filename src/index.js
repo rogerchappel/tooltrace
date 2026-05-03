@@ -308,6 +308,10 @@ export function createProofSummary(events = [], options = {}) {
     const unique = [...new Set(values.filter(Boolean))];
     if (unique.length) bullets.push(`- **${label}:** ${unique.join('; ')}`);
   };
+  if (options.includeCounts !== false) {
+    const counts = timeline.counts ?? countTimelineEvents(normalized);
+    bullets.push(`- **Shape:** ${counts.total} events, ${timeline.groups?.length ?? 0} groups, ${counts.blocking} blockers, ${counts.needsApproval} approvals`);
+  }
   const title = options.title ?? 'ToolTrace proof summary';
   add('Commands', normalized.filter((e) => e.category === 'command').map((e) => `${e.command?.value ?? e.title}${e.command?.exitCode != null ? ` (exit ${e.command.exitCode})` : ''}`));
   add('Files', normalized.filter((e) => e.category === 'file_change').map((e) => `${e.file?.operation ?? 'changed'} ${e.file?.path ?? e.title}`));
