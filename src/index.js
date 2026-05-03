@@ -360,8 +360,8 @@ export function agentPulseToToolTraceEvent(event = {}, index = 0, options = {}) 
   else if (/fail|error/i.test(type)) mapped.category = 'error';
   else if (/retry/i.test(type)) mapped.category = 'retry';
   else if (/block/i.test(type)) mapped.category = 'blocker';
-  else if (/commit|pull|pr/i.test(type)) mapped.category = 'pr_commit';
-  else if (/complete|proof/i.test(type)) mapped.category = 'completion_proof';
+  else if (/complete|completion|proof/i.test(type)) mapped.category = 'completion_proof';
+  else if (/commit|pull_request|pull-request|\bpr\b/i.test(type)) mapped.category = 'pr_commit';
   else mapped.category = 'message';
   mapped.title ??= event.title ?? event.message ?? type;
   mapped.body ??= event.message ?? event.payload?.output;
