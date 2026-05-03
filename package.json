@@ -9,7 +9,8 @@
   },
   "exports": {
     ".": "./src/index.js",
-    "./react": "./src/react.js"
+    "./react": "./src/react.js",
+    "./styles.css": "./src/styles.css"
   },
   "files": [
     "src",
@@ -18,7 +19,8 @@
     "docs",
     "examples",
     "tests/fixtures",
-    "SAFETY.md"
+    "SAFETY.md",
+    "src/styles.css"
   ],
   "scripts": {
     "test": "node --test",

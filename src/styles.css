@@ -1,0 +1,50 @@
+.tooltrace {
+  --tooltrace-bg: #0f172a;
+  --tooltrace-card: #111827;
+  --tooltrace-line: #334155;
+  --tooltrace-text: #e5e7eb;
+  --tooltrace-muted: #94a3b8;
+  display: grid;
+  gap: 1rem;
+  color: var(--tooltrace-text);
+  font: 14px/1.5 ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+.tooltrace-group {
+  border: 1px solid var(--tooltrace-line);
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01)), var(--tooltrace-card);
+  padding: 1rem;
+}
+.tooltrace-group__header,
+.tooltrace-event__meta {
+  align-items: center;
+  display: flex;
+  gap: .75rem;
+  justify-content: space-between;
+}
+.tooltrace-events {
+  display: grid;
+  gap: .75rem;
+  list-style: none;
+  margin: 1rem 0 0;
+  padding: 0;
+}
+.tooltrace-event {
+  border-left: 3px solid var(--tooltrace-line);
+  padding-left: .75rem;
+}
+.tooltrace-event--success { --tooltrace-line: #22c55e; }
+.tooltrace-event--warning { --tooltrace-line: #f59e0b; }
+.tooltrace-event--error { --tooltrace-line: #ef4444; }
+.tooltrace-event--blocked { --tooltrace-line: #f97316; }
+.tooltrace-event--approval { --tooltrace-line: #a78bfa; }
+.tooltrace-event__body,
+.tooltrace-event__meta,
+.tooltrace-proof-summary { color: var(--tooltrace-muted); }
+.tooltrace-proof-summary {
+  border: 1px dashed var(--tooltrace-line);
+  border-radius: 12px;
+  overflow: auto;
+  padding: 1rem;
+  white-space: pre-wrap;
+}
