@@ -1,7 +1,7 @@
 {
   "name": "tooltrace",
   "version": "0.1.0",
-  "description": "A local-first activity timeline and proof-of-work layer for agent apps.",
+  "description": "Local-first proof-of-work timelines for agent apps.",
   "type": "module",
   "main": "./src/index.js",
   "bin": {
@@ -14,19 +14,30 @@
   "files": [
     "src",
     "demo",
-    "README.md"
+    "README.md",
+    "docs",
+    "examples",
+    "tests/fixtures",
+    "SAFETY.md"
   ],
   "scripts": {
     "test": "node --test",
     "build": "node -e \"await import('./src/index.js')\" && node src/cli.js --help >/dev/null"
   },
   "keywords": [
+    "activity-feed",
+    "agentic",
     "agents",
-    "timeline",
+    "ai-agents",
+    "jsonl",
+    "local-first",
+    "observability",
     "proof-of-work",
-    "react"
+    "react",
+    "review",
+    "timeline"
   ],
-  "author": "StackForge User",
+  "author": "Roger Chappel",
   "license": "MIT",
   "peerDependencies": {
     "react": ">=18"
@@ -35,5 +46,21 @@
     "react": {
       "optional": true
     }
+  },
+  "homepage": "https://github.com/rogerchappel/tooltrace#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/rogerchappel/tooltrace.git"
+  },
+  "bugs": {
+    "url": "https://github.com/rogerchappel/tooltrace/issues"
+  },
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/rogerchappel"
+  },
+  "sideEffects": false,
+  "engines": {
+    "node": ">=20"
   }
 }
