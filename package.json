@@ -20,7 +20,11 @@
     "examples",
     "tests/fixtures",
     "SAFETY.md",
-    "src/styles.css"
+    "src/styles.css",
+    "LICENSE",
+    "SECURITY.md",
+    "CHANGELOG.md",
+    "CONTRIBUTING.md"
   ],
   "scripts": {
     "check": "node scripts/check-package.mjs",
