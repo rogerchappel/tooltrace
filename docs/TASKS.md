@@ -152,3 +152,19 @@ Run tests, inspect demo, review accessibility, verify summaries, and ensure proo
 **Acceptance Criteria**
 
 Human/product review confirms the component increases trust and does not overwhelm users.
+
+### tooltrace-proof-gate: Add CI-friendly proof gates
+
+- Repo: `tooltrace`
+- Phase: `release_candidate`
+- Risk: `low`
+- Branch: `release-candidate/tooltrace`
+- Depends on: `tooltrace-proof-summary-generator`, `tooltrace-cli-render-summary`
+
+**Objective**
+
+Expose a deterministic proof gate that lets review scripts fail on unresolved blockers, pending approvals, failed checks, or missing completion proof.
+
+**Acceptance Criteria**
+
+`createProofGate` is exported, JSON summary output includes gate counts, and `tooltrace summary --fail-on ...` exits non-zero for matching unresolved proof.

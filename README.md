@@ -22,10 +22,11 @@ React is an optional peer dependency for `tooltrace/react`. Import `tooltrace/st
 ## Core usage
 
 ```js
-import { createTimeline, createProofSummary } from 'tooltrace';
+import { createProofGate, createTimeline, createProofSummary } from 'tooltrace';
 
 const timeline = createTimeline(events, { includeRaw: false });
 console.log(createProofSummary(timeline));
+console.log(createProofGate(timeline, { requireCompletion: true }));
 ```
 
 Supported proof categories include messages, commands, tool calls, file changes, checks, approvals, errors/retries, blockers, PR/commit links, and completion proof.
@@ -49,10 +50,12 @@ The component supports compact, grouped, and review/proof presentation via CSS c
 
 ```sh
 tooltrace summary ./demo/crewcmd-run.jsonl
+tooltrace summary ./demo/crewcmd-run.jsonl --fail-on blockers
 tooltrace render ./demo/crewcmd-run.jsonl --out TOOLTRACE.md
 ```
 
 The CLI accepts generic JSONL: one JSON event object per line.
+Use `--fail-on blockers`, `--fail-on approvals`, `--fail-on failed-checks`, or `--fail-on any` in CI or review scripts when unresolved proof should stop the lane. Add `--require-completion` when the run must include an explicit completion proof event.
 
 ## Adapters
 

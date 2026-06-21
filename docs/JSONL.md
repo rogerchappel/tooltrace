@@ -23,3 +23,7 @@ ToolTrace accepts one JSON object per line. Unknown fields are preserved in `raw
 {"timestamp":"2026-05-01T02:00:00Z","type":"exec","command":"npm test","status":"passed","exitCode":0}
 {"timestamp":"2026-05-01T02:01:00Z","category":"completion_proof","title":"Ready for review"}
 ```
+
+## Proof gates
+
+`tooltrace summary run.jsonl --fail-on any --require-completion` exits with status `2` when unresolved proof remains. Gate failures include failed `check` events, `blocker` events, unresolved `approval` events, and missing completion proof when requested.
