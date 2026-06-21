@@ -299,6 +299,31 @@ export function createReviewChecklist(events = []) {
   ];
 }
 
+export function createProofGate(events = [], options = {}) {
+  const timeline = Array.isArray(events) ? createTimeline(events, options) : events;
+  const normalized = timeline.events ?? [];
+  const failedChecks = normalized.filter((event) => event.category === 'check' && !(event.severity === 'success' || event.check?.passed === true));
+  const blockers = normalized.filter((event) => event.category === 'blocker' || event.severity === 'blocked');
+  const approvals = normalized.filter((event) => event.category === 'approval' && !['approved', 'completed', 'resolved'].includes(String(event.status ?? '').toLowerCase()));
+  const missingCompletion = !normalized.some((event) => event.category === 'completion_proof');
+  const failures = [
+    ...failedChecks.map((event) => ({ id: event.id, reason: 'failed-check', title: event.title })),
+    ...blockers.map((event) => ({ id: event.id, reason: 'blocker', title: event.title })),
+    ...approvals.map((event) => ({ id: event.id, reason: 'approval', title: event.title })),
+    ...(missingCompletion && options.requireCompletion ? [{ id: 'completion-proof', reason: 'missing-completion-proof', title: 'Completion proof is required' }] : []),
+  ];
+  return {
+    passed: failures.length === 0,
+    failures,
+    counts: {
+      failedChecks: failedChecks.length,
+      blockers: blockers.length,
+      approvals: approvals.length,
+      missingCompletion: missingCompletion && options.requireCompletion ? 1 : 0,
+    },
+  };
+}
+
 export function createProofSummary(events = [], options = {}) {
   const timeline = Array.isArray(events) ? createTimeline(events, options) : events;
   const normalized = timeline.events ?? [];
@@ -322,6 +347,10 @@ export function createProofSummary(events = [], options = {}) {
   add('Completion', normalized.filter((e) => e.category === 'completion_proof').map((e) => e.title));
   const redactionCount = normalized.reduce((sum, e) => sum + (e.redactions?.length ?? 0), 0);
   if (redactionCount) bullets.push(`- **Redactions:** ${redactionCount} sensitive/noisy field(s) hidden`);
+  if (options.includeGate) {
+    const gate = createProofGate(timeline, { requireCompletion: options.requireCompletion });
+    bullets.push(`- **Gate:** ${gate.passed ? 'passed' : `failed (${gate.failures.map((failure) => failure.reason).join(', ')})`}`);
+  }
   const body = [`## ${title}`, '', ...bullets, '', `_${normalized.length} events across ${timeline.groups?.length ?? 0} proof group(s)._`].join('\n');
   if (format === 'slack') return body.replace(/^## /, '*').replace('\n\n', '*\n');
   return body;
