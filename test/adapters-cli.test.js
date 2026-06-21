@@ -67,3 +67,17 @@ test('CLI renders markdown and writes --out files', async () => {
   const piped = await runWithInput(process.execPath, ['src/cli.js', 'summary', '-'], await readFile(input, 'utf8'), { cwd: new URL('..', import.meta.url) });
   assert.match(piped.stdout, /Commands/);
 });
+
+test('CLI proof gate can fail builds on blocked runs', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'tooltrace-gate-'));
+  const input = join(dir, 'blocked.jsonl');
+  await writeFile(input, JSON.stringify({ timestamp: '2026-05-01T01:00:00Z', type: 'blocked', title: 'Waiting on approval' }));
+
+  await assert.rejects(
+    execFileAsync(process.execPath, ['src/cli.js', 'summary', input, '--fail-on', 'blockers'], { cwd: new URL('..', import.meta.url) }),
+    /Gate|blocked|process exited/i,
+  );
+
+  const json = await execFileAsync(process.execPath, ['src/cli.js', 'summary', input, '--format', 'json'], { cwd: new URL('..', import.meta.url) });
+  assert.equal(JSON.parse(json.stdout).gate.counts.blockers, 1);
+});
