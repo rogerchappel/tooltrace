@@ -6,6 +6,7 @@ import {
   TOOLTRACE_GROUP_TYPES,
   TOOLTRACE_REDACTION_REASONS,
   TOOLTRACE_SEVERITIES,
+  createProofGate,
   isToolTraceCategory,
 } from '../src/index.js';
 
@@ -38,4 +39,20 @@ test('Wave 1 proof contract covers review metadata dimensions', () => {
   assert.ok(TOOLTRACE_EVIDENCE_KINDS.includes('command_output'));
   assert.ok(TOOLTRACE_REDACTION_REASONS.includes('credential'));
   assert.ok(TOOLTRACE_REDACTION_REASONS.includes('customer_data'));
+});
+
+test('proof gate fails unresolved blockers, approvals, failed checks, and missing completion proof', () => {
+  const gate = createProofGate([
+    { timestamp: '2026-05-01T01:00:00Z', type: 'check', title: 'npm test', status: 'failed' },
+    { timestamp: '2026-05-01T01:01:00Z', type: 'approval_request', title: 'Needs deploy approval' },
+    { timestamp: '2026-05-01T01:02:00Z', type: 'blocked', title: 'Missing fixture' },
+  ], { requireCompletion: true });
+
+  assert.equal(gate.passed, false);
+  assert.deepEqual(gate.counts, {
+    failedChecks: 1,
+    blockers: 1,
+    approvals: 1,
+    missingCompletion: 1,
+  });
 });
