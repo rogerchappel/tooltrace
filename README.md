@@ -92,9 +92,12 @@ Run the local validation script before opening a pull request:
 
 ```sh
 bash scripts/validate.sh
+npm run release:check
 ```
 
 `scripts/validate.sh` runs package checks when present and skips optional `agent-qc` if it is not installed.
+`release:check` is the package release gate for check, tests, build, smoke, and
+package dry-run verification.
 
 ## Security
 
