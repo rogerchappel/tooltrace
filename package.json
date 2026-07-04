@@ -60,7 +60,7 @@
   "homepage": "https://github.com/rogerchappel/tooltrace#readme",
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/rogerchappel/tooltrace.git"
+    "url": "git+https://github.com/rogerchappel/tooltrace.git"
   },
   "bugs": {
     "url": "https://github.com/rogerchappel/tooltrace/issues"
