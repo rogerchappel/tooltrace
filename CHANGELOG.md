@@ -7,6 +7,11 @@ format and uses semantic versioning when versioned releases are published.
 
 ## [Unreleased]
 
+### Fixed
+
+- Restored the `tooltrace/react` entry point so its timeline, review checklist,
+  and proof summary components can be imported and rendered from the package.
+
 ### Added
 
 - Initial project setup.
