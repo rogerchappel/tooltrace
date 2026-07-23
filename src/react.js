@@ -47,7 +47,6 @@ export function ToolTraceReviewChecklist({ events = [] }) {
     checklist.map((item) => React.createElement('li', { key: item.id, 'data-passed': item.passed ? 'true' : 'false' },
       `${item.passed ? '✓' : '•'} ${item.label}`)));
 }
-}
 
 export function ToolTraceProofSummary({ events = [], format = 'markdown' }) {
   return React.createElement('pre', { className: 'tooltrace-proof-summary' }, createProofSummary(events, { format }));
