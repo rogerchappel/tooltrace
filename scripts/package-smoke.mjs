@@ -35,11 +35,47 @@ try {
   await mkdir(appRoot);
 
   run('npm', ['init', '-y'], { cwd: appRoot });
-  run('npm', ['install', join(tempRoot, tarballs[0])], { cwd: appRoot });
+  run('npm', ['install', '--ignore-scripts', join(tempRoot, tarballs[0]), 'react@18', 'react-dom@18'], { cwd: appRoot });
 
   await writeFile(join(appRoot, 'sample.jsonl'), `${JSON.stringify({ event: 'start', title: 'Package smoke' })}\n`);
   run('npx', ['tooltrace', 'summary', 'sample.jsonl'], { cwd: appRoot });
   run('node', ['--input-type=module', '-e', "import { normalizeEvent } from 'tooltrace'; const event = normalizeEvent({ title: 'ok' }); if (event.title !== 'ok') process.exit(1);"] , { cwd: appRoot });
+
+  await writeFile(join(appRoot, 'react-smoke.mjs'), `
+import assert from 'node:assert/strict';
+import React from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import * as components from 'tooltrace/react';
+
+assert.deepEqual(Object.keys(components).sort(), [
+  'ToolTrace',
+  'ToolTraceProofSummary',
+  'ToolTraceReviewChecklist',
+]);
+
+const events = [{
+  type: 'test',
+  title: 'Package React smoke',
+  status: 'passed',
+  timestamp: '2026-01-01T00:00:00.000Z',
+}];
+
+const timeline = renderToStaticMarkup(React.createElement(components.ToolTrace, {
+  events,
+  showProofSummary: true,
+  showReviewChecklist: true,
+}));
+assert.match(timeline, /Package React smoke/);
+assert.match(timeline, /ToolTrace review checklist/);
+assert.match(timeline, /ToolTrace proof summary/);
+
+const checklist = renderToStaticMarkup(React.createElement(components.ToolTraceReviewChecklist, { events }));
+assert.match(checklist, /ToolTrace review checklist/);
+
+const proof = renderToStaticMarkup(React.createElement(components.ToolTraceProofSummary, { events }));
+assert.match(proof, /ToolTrace proof summary/);
+`);
+  run('node', ['react-smoke.mjs'], { cwd: appRoot });
 
   console.log('Package smoke passed.');
 } finally {
