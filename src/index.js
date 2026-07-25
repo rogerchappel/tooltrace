@@ -59,7 +59,11 @@ export const TOOLTRACE_REDACTION_REASONS = Object.freeze([
 ]);
 
 export const DEFAULT_REDACTION_PATTERNS = Object.freeze([
-  { reason: 'credential', pattern: /\b(?:api[_-]?key|token|secret|password)\s*[=:]\s*[^\s,;]+/gi, replacement: '$1=[redacted:credential]' },
+  {
+    reason: 'credential',
+    pattern: /\b(api[_-]?key|token|secret|password)\s*[=:]\s*[^\s,;]+/gi,
+    replacement: (_match, key) => `${key.toLowerCase().replace('-', '_')}=[redacted:credential]`,
+  },
   { reason: 'token', pattern: /\b(?:ghp|gho|github_pat|sk)-[A-Za-z0-9_\-]{12,}\b/g, replacement: '[redacted:token]' },
 ]);
 
