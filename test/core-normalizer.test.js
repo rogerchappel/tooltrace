@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createProofSummary, createTimeline, normalizeEvents } from '../src/index.js';
+import { createProofSummary, createTimeline, normalizeEvents, redactText } from '../src/index.js';
 
 const fixture = [
   { id: '2', timestamp: '2026-05-01T00:02:00Z', type: 'exec', command: 'npm test', exitCode: 0, status: 'passed', groupId: 'validate' },
@@ -20,6 +20,30 @@ test('normalizes ordering, redaction, commands, file changes, retries, blockers,
   assert.equal(events[3].severity, 'blocked');
   assert.match(events[3].title, /\[redacted:credential\]/);
   assert.equal(events[4].severity, 'success');
+});
+
+test('redacts credential values while preserving normalized labels', () => {
+  const input = [
+    'api_key=supersecret',
+    'token: abcdefghijklmnop',
+    'Secret = do-not-show',
+    'PASSWORD: also-private',
+  ].join(' ');
+
+  assert.equal(
+    redactText(input).text,
+    [
+      'api_key=[redacted:credential]',
+      'token=[redacted:credential]',
+      'secret=[redacted:credential]',
+      'password=[redacted:credential]',
+    ].join(' '),
+  );
+});
+
+test('leaves non-credential text unchanged', () => {
+  const input = 'Processed 4 records without credentials';
+  assert.equal(redactText(input).text, input);
 });
 
 test('groups timeline activity and exposes query helpers', () => {
