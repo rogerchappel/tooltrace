@@ -8,12 +8,39 @@ function usage(exitCode = 0) {
   process.exit(exitCode);
 }
 
-function takeFlag(args, name) {
-  const index = args.indexOf(name);
-  if (index === -1) return undefined;
-  const value = args[index + 1];
-  args.splice(index, 2);
-  return value;
+const COMMAND_OPTIONS = {
+  summary: new Set(['--out', '--format', '--fail-on', '--require-completion']),
+  render: new Set(['--out']),
+};
+
+function parseArgs(args) {
+  const command = args.shift();
+  if (!COMMAND_OPTIONS[command]) throw new Error(`Unknown command: ${command}`);
+
+  const options = { format: 'markdown', requireCompletion: false };
+  let file;
+  for (let index = 0; index < args.length; index += 1) {
+    const argument = args[index];
+    if (!argument.startsWith('--')) {
+      if (file) throw new Error(`Unexpected argument: ${argument}`);
+      file = argument;
+      continue;
+    }
+    if (!COMMAND_OPTIONS[command].has(argument)) {
+      throw new Error(`Option ${argument} is not supported by the ${command} command`);
+    }
+    if (argument === '--require-completion') {
+      options.requireCompletion = true;
+      continue;
+    }
+    const value = args[index + 1];
+    if (!value || value.startsWith('--')) throw new Error(`Option ${argument} requires a value`);
+    const key = { '--out': 'out', '--format': 'format', '--fail-on': 'failOn' }[argument];
+    options[key] = value;
+    index += 1;
+  }
+  if (!file) throw new Error('Missing JSONL input file');
+  return { command, file, ...options };
 }
 
 function renderTimeline(events) {
@@ -35,16 +62,7 @@ function renderTimeline(events) {
 async function main() {
   const args = process.argv.slice(2);
   if (args.includes('--help') || args.length === 0) usage(args.length === 0 ? 1 : 0);
-  const command = args.shift();
-  const out = takeFlag(args, '--out');
-  const format = takeFlag(args, '--format') ?? 'markdown';
-  const failOn = takeFlag(args, '--fail-on');
-  const requireCompletion = args.includes('--require-completion');
-  if (requireCompletion) args.splice(args.indexOf('--require-completion'), 1);
-  const file = args.shift();
-  if (!['summary', 'render'].includes(command)) throw new Error(`Unknown command: ${command}`);
-  if (!file) throw new Error('Missing JSONL input file');
-  if (args.length) throw new Error(`Unexpected argument(s): ${args.join(' ')}`);
+  const { command, file, out, format, failOn, requireCompletion } = parseArgs(args);
 
   const text = file === '-' ? await new Promise((resolve, reject) => {
     let data = '';

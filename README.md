@@ -55,6 +55,11 @@ tooltrace render ./demo/crewcmd-run.jsonl --out TOOLTRACE.md
 ```
 
 The CLI accepts generic JSONL: one JSON event object per line.
+
+`summary` accepts `--format markdown|slack|json`, `--fail-on blockers|approvals|failed-checks|any`,
+`--require-completion`, and `--out <path>`. `render` accepts only `--out <path>`. Options may
+appear before or after the input file. Value-bearing options require an explicit operand; malformed
+or command-inapplicable options exit with status 1. A triggered proof gate exits with status 2.
 Use `--fail-on blockers`, `--fail-on approvals`, `--fail-on failed-checks`, or `--fail-on any` in CI or review scripts when unresolved proof should stop the lane. Add `--require-completion` when the run must include an explicit completion proof event.
 
 ## Adapters
