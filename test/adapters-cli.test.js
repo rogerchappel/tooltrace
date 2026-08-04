@@ -81,3 +81,42 @@ test('CLI proof gate can fail builds on blocked runs', async () => {
   const json = await execFileAsync(process.execPath, ['src/cli.js', 'summary', input, '--format', 'json'], { cwd: new URL('..', import.meta.url) });
   assert.equal(JSON.parse(json.stdout).gate.counts.blockers, 1);
 });
+
+test('CLI rejects missing and option-like option values', async () => {
+  const cwd = new URL('..', import.meta.url);
+  for (const args of [
+    ['summary', 'demo/crewcmd-run.jsonl', '--out'],
+    ['summary', 'demo/crewcmd-run.jsonl', '--format', '--out', 'result.md'],
+    ['summary', 'demo/crewcmd-run.jsonl', '--fail-on', '--require-completion'],
+  ]) {
+    await assert.rejects(
+      execFileAsync(process.execPath, ['src/cli.js', ...args], { cwd }),
+      (error) => error.code === 1 && /requires a value/.test(error.stderr),
+    );
+  }
+});
+
+test('CLI enforces command-specific options', async () => {
+  const cwd = new URL('..', import.meta.url);
+  for (const optionArgs of [
+    ['--format', 'json'],
+    ['--fail-on', 'any'],
+    ['--require-completion'],
+  ]) {
+    await assert.rejects(
+      execFileAsync(process.execPath, ['src/cli.js', 'render', 'demo/crewcmd-run.jsonl', ...optionArgs], { cwd }),
+      (error) => error.code === 1 && /not supported by the render command/.test(error.stderr),
+    );
+  }
+});
+
+test('CLI accepts summary options before and after the input', async () => {
+  const cwd = new URL('..', import.meta.url);
+  const before = await execFileAsync(process.execPath, ['src/cli.js', 'summary', '--format', 'json', 'demo/crewcmd-run.jsonl'], { cwd });
+  assert.equal(JSON.parse(before.stdout).counts.command, 1);
+
+  await assert.rejects(
+    execFileAsync(process.execPath, ['src/cli.js', 'summary', '--fail-on', 'blockers', 'tests/fixtures/blocked-run.jsonl'], { cwd }),
+    (error) => error.code === 2 && /Blockers/.test(error.stdout),
+  );
+});
