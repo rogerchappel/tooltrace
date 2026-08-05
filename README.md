@@ -54,7 +54,9 @@ tooltrace summary ./demo/crewcmd-run.jsonl --fail-on blockers
 tooltrace render ./demo/crewcmd-run.jsonl --out TOOLTRACE.md
 ```
 
-The CLI accepts generic JSONL: one JSON event object per line.
+The CLI accepts generic JSONL: one JSON event object per line, with optional blank lines. Invalid
+JSON or event fields are reported against their physical source line; invalid timestamps include the
+timestamp field and value in the diagnostic.
 
 `summary` accepts `--format markdown|slack|json`, `--fail-on blockers|approvals|failed-checks|any`,
 `--require-completion`, and `--out <path>`. `render` accepts only `--out <path>`. Options may
