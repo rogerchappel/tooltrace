@@ -171,13 +171,20 @@ function normalizeEvidence(evidence = [], event) {
 }
 
 export function normalizeEvent(raw, index = 0, options = {}) {
-  if (!raw || typeof raw !== 'object') throw new TypeError('ToolTrace events must be objects');
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
+    throw new TypeError(`ToolTrace event must be an object; received ${formatDiagnosticValue(raw)}`);
+  }
   const category = normalizeCategory(raw.category ?? raw.type ?? raw.kind);
   const titleSource = raw.title ?? raw.name ?? raw.command ?? raw.tool ?? raw.action ?? category.replace('_', ' ');
   const bodySource = raw.body ?? raw.message ?? raw.summary ?? raw.output ?? raw.error ?? '';
   const title = redactText(titleSource, options);
   const body = redactText(bodySource, options);
-  const timestamp = raw.timestamp ?? raw.time ?? raw.ts ?? new Date(0).toISOString();
+  const timestampField = raw.timestamp != null ? 'timestamp' : raw.time != null ? 'time' : raw.ts != null ? 'ts' : undefined;
+  const timestamp = timestampField ? raw[timestampField] : new Date(0).toISOString();
+  const normalizedTimestamp = new Date(timestamp);
+  if (Number.isNaN(normalizedTimestamp.getTime())) {
+    throw new RangeError(`Invalid ${timestampField ?? 'timestamp'} value ${formatDiagnosticValue(timestamp)}`);
+  }
   const status = raw.status ?? raw.outcome;
   return {
     id: stableId(raw, index),
@@ -186,7 +193,7 @@ export function normalizeEvent(raw, index = 0, options = {}) {
     status: status ?? (category === 'completion_proof' ? 'completed' : undefined),
     title: title.text,
     body: body.text,
-    timestamp: new Date(timestamp).toISOString(),
+    timestamp: normalizedTimestamp.toISOString(),
     runId: raw.runId ?? raw.run_id ?? raw.sessionId ?? raw.session_id,
     groupId: raw.groupId ?? raw.group_id ?? raw.stepId ?? raw.step_id,
     parentId: raw.parentId ?? raw.parent_id,
@@ -361,18 +368,40 @@ export function createProofSummary(events = [], options = {}) {
 }
 
 export function parseJsonl(text) {
-  return String(text)
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .map((line, index) => {
-      try { return JSON.parse(line); }
-      catch (error) { throw new SyntaxError(`Invalid JSONL at line ${index + 1}: ${error.message}`); }
-    });
+  return parseJsonlEntries(text).map(({ event }) => event);
 }
 
 export function jsonlToToolTraceEvents(text, options = {}) {
-  return normalizeEvents(parseJsonl(text), { ...options, includeRaw: options.includeRaw ?? false });
+  const normalizeOptions = { ...options, includeRaw: options.includeRaw ?? false };
+  return parseJsonlEntries(text)
+    .map(({ event, lineNumber }, index) => {
+      try {
+        return normalizeEvent(event, index, normalizeOptions);
+      } catch (error) {
+        const wrapped = new error.constructor(`Invalid JSONL event at line ${lineNumber}: ${error.message}`, { cause: error });
+        throw wrapped;
+      }
+    })
+    .sort((a, b) => Date.parse(a.timestamp) - Date.parse(b.timestamp) || a.id.localeCompare(b.id));
+}
+
+function parseJsonlEntries(text) {
+  const entries = [];
+  for (const [index, sourceLine] of String(text).split(/\r?\n/).entries()) {
+    const line = sourceLine.trim();
+    if (!line) continue;
+    try {
+      entries.push({ event: JSON.parse(line), lineNumber: index + 1 });
+    } catch (error) {
+      throw new SyntaxError(`Invalid JSONL at line ${index + 1}: ${error.message}`, { cause: error });
+    }
+  }
+  return entries;
+}
+
+function formatDiagnosticValue(value) {
+  const serialized = JSON.stringify(value);
+  return serialized === undefined ? String(value) : serialized;
 }
 
 export function agentPulseToToolTraceEvent(event = {}, index = 0, options = {}) {
