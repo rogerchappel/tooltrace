@@ -2,6 +2,14 @@
 
 ToolTrace accepts one JSON object per line. Unknown fields are preserved in `raw` unless `includeRaw: false` is used.
 
+Blank lines are allowed. Parser and normalization errors report the physical source line, including
+blank lines, so diagnostics remain stable when files are spaced for readability. Event-shape errors
+also name the invalid field and value when available; for example:
+
+```text
+tooltrace: Invalid JSONL event at line 4: Invalid timestamp value "not-a-date"
+```
+
 ## Common fields
 
 | Field | Purpose |

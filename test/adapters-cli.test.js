@@ -49,8 +49,36 @@ test('AgentPulse adapter maps event types with source metadata', () => {
   assert.equal(events[0].source.kind, 'agentpulse');
 });
 
-test('JSONL parser reports useful line errors', () => {
-  assert.throws(() => parseJsonl('{bad}'), /line 1/);
+test('JSONL parser reports physical line numbers across blank lines', () => {
+  assert.throws(
+    () => parseJsonl('\n  \n{bad}'),
+    (error) => error instanceof SyntaxError && /Invalid JSONL at line 3/.test(error.message),
+  );
+});
+
+test('JSONL adapter reports the physical line and invalid timestamp field', () => {
+  const input = [
+    '',
+    JSON.stringify({ timestamp: '2026-05-01T01:00:00Z', type: 'exec', command: 'npm test' }),
+    '',
+    JSON.stringify({ timestamp: 'not-a-date', type: 'message', title: 'Finished' }),
+  ].join('\n');
+
+  assert.throws(
+    () => jsonlToToolTraceEvents(input),
+    (error) => /Invalid JSONL event at line 4/.test(error.message)
+      && /timestamp/.test(error.message)
+      && /"not-a-date"/.test(error.message),
+  );
+});
+
+test('JSONL adapter reports the physical line and invalid event value', () => {
+  assert.throws(
+    () => jsonlToToolTraceEvents('\nnull'),
+    (error) => /Invalid JSONL event at line 2/.test(error.message)
+      && /event/.test(error.message)
+      && /null/.test(error.message),
+  );
 });
 
 test('CLI renders markdown and writes --out files', async () => {
@@ -66,6 +94,24 @@ test('CLI renders markdown and writes --out files', async () => {
   assert.equal(JSON.parse(json.stdout).counts.command, 1);
   const piped = await runWithInput(process.execPath, ['src/cli.js', 'summary', '-'], await readFile(input, 'utf8'), { cwd: new URL('..', import.meta.url) });
   assert.match(piped.stdout, /Commands/);
+});
+
+test('CLI reports physical lines for malformed JSON and invalid timestamps', async () => {
+  const cwd = new URL('..', import.meta.url);
+
+  await assert.rejects(
+    runWithInput(process.execPath, ['src/cli.js', 'summary', '-'], '\n\n{bad}', { cwd }),
+    /Invalid JSONL at line 3/,
+  );
+  await assert.rejects(
+    runWithInput(
+      process.execPath,
+      ['src/cli.js', 'summary', '-'],
+      `\n${JSON.stringify({ timestamp: 'not-a-date', type: 'message' })}`,
+      { cwd },
+    ),
+    /Invalid JSONL event at line 2:.*timestamp.*"not-a-date"/,
+  );
 });
 
 test('CLI proof gate can fail builds on blocked runs', async () => {
