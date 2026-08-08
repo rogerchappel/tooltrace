@@ -20,6 +20,8 @@ tooltrace: Invalid JSONL event at line 4: Invalid timestamp value "not-a-date"
 | `body`, `message`, `summary`, `output`, `error` | Longer detail. |
 | `groupId`, `runId`, `parentId` | Grouping and provenance. |
 | `status`, `outcome`, `severity` | Used to infer review tone. |
+| `passed`, `check.passed` | Explicit boolean result evidence for checks. |
+| `exitCode`, `exit_code`, `check.exitCode`, `check.exit_code` | Explicit process result evidence for checks. |
 
 ## Supported categories
 
@@ -35,3 +37,14 @@ tooltrace: Invalid JSONL event at line 4: Invalid timestamp value "not-a-date"
 ## Proof gates
 
 `tooltrace summary run.jsonl --fail-on any --require-completion` exits with status `2` when unresolved proof remains. Gate failures include failed `check` events, `blocker` events, unresolved `approval` events, and missing completion proof when requested.
+
+Check fields have deterministic precedence when producers send contradictory evidence:
+
+1. `passed: false` or a nonzero numeric exit code is a failure.
+2. An explicit failure or blocked `severity`, `status`, or `outcome` is a failure.
+3. `passed: true` or a zero numeric exit code is a success.
+4. Otherwise, explicit severity and then lifecycle status determine the result.
+
+Failure evidence wins over success evidence at the same event. In particular, lifecycle
+`status: "completed"` does not hide `passed: false` or a nonzero exit code. The camel-case and
+snake-case exit-code fields are equivalent, including inside `check` metadata.

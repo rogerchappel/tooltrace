@@ -131,6 +131,29 @@ export function normalizeSeverity(value, category = 'message', status) {
   return 'info';
 }
 
+function normalizeCheckSeverity(value, status, check = {}) {
+  const explicitSeverity = value ? normalizeSeverity(value, 'check') : undefined;
+  const statusSeverity = status ? normalizeSeverity(undefined, 'check', status) : undefined;
+  const exitCode = check.exitCode;
+  const hasNumericExitCode = exitCode !== undefined && exitCode !== null && exitCode !== '' && Number.isFinite(Number(exitCode));
+
+  // Failure evidence always wins so lifecycle completion cannot conceal a failed result.
+  if (check.passed === false || (hasNumericExitCode && Number(exitCode) !== 0)) return 'error';
+  if (['error', 'blocked'].includes(explicitSeverity)) return explicitSeverity;
+  if (['error', 'blocked'].includes(statusSeverity)) return statusSeverity;
+  if (check.passed === true || (hasNumericExitCode && Number(exitCode) === 0)) return 'success';
+  return explicitSeverity ?? statusSeverity ?? normalizeSeverity(undefined, 'check');
+}
+
+function isCheckSuccessful(event) {
+  const exitCode = event.check?.exitCode;
+  const hasNumericExitCode = exitCode !== undefined && exitCode !== null && exitCode !== '' && Number.isFinite(Number(exitCode));
+  if (event.check?.passed === false || (hasNumericExitCode && Number(exitCode) !== 0)) return false;
+  if (['error', 'blocked'].includes(event.severity)) return false;
+  if (event.check?.passed === true || (hasNumericExitCode && Number(exitCode) === 0)) return true;
+  return event.severity === 'success';
+}
+
 export function redactText(value, options = {}) {
   if (value == null) return value;
   let text = String(value);
@@ -186,10 +209,18 @@ export function normalizeEvent(raw, index = 0, options = {}) {
     throw new RangeError(`Invalid ${timestampField ?? 'timestamp'} value ${formatDiagnosticValue(timestamp)}`);
   }
   const status = raw.status ?? raw.outcome;
+  const check = category === 'check' || raw.check != null || raw.checkName != null ? {
+    name: raw.checkName ?? raw.check?.name ?? raw.title,
+    command: raw.checkCommand ?? raw.check?.command,
+    passed: raw.passed ?? raw.check?.passed,
+    exitCode: raw.exitCode ?? raw.exit_code ?? raw.check?.exitCode ?? raw.check?.exit_code,
+  } : undefined;
   return {
     id: stableId(raw, index),
     category,
-    severity: normalizeSeverity(raw.severity, category, status),
+    severity: category === 'check'
+      ? normalizeCheckSeverity(raw.severity, status, check)
+      : normalizeSeverity(raw.severity, category, status),
     status: status ?? (category === 'completion_proof' ? 'completed' : undefined),
     title: title.text,
     body: body.text,
@@ -201,7 +232,7 @@ export function normalizeEvent(raw, index = 0, options = {}) {
     command: raw.command ? { value: redactText(raw.command, options).text, cwd: raw.cwd, exitCode: raw.exitCode ?? raw.exit_code, durationMs: raw.durationMs ?? raw.duration_ms } : raw.commandMetadata,
     tool: raw.tool || raw.toolName ? { name: raw.tool ?? raw.toolName, input: raw.input, output: raw.output } : raw.toolMetadata,
     file: raw.file ?? raw.filePath ?? raw.path ? { path: raw.filePath ?? raw.path ?? raw.file?.path, operation: raw.operation ?? raw.file?.operation, additions: raw.additions ?? raw.file?.additions, deletions: raw.deletions ?? raw.file?.deletions } : undefined,
-    check: raw.check ?? raw.checkName ? { name: raw.checkName ?? raw.check?.name ?? raw.title, command: raw.checkCommand ?? raw.check?.command, passed: raw.passed ?? raw.check?.passed, exitCode: raw.exitCode ?? raw.check?.exitCode } : undefined,
+    check,
     evidence: normalizeEvidence(raw.evidence, raw),
     redactions: [...(title.redactions ?? []), ...(body.redactions ?? []), ...(raw.redactions ?? [])],
     source: raw.source ?? { kind: 'raw_event', index },
@@ -262,7 +293,7 @@ export function createTimeline(events = [], options = {}) {
     counts: countTimelineEvents(normalized),
     byCategory(category) { return normalized.filter((event) => event.category === category); },
     hasBlockers() { return normalized.some((event) => event.category === 'blocker' || event.severity === 'blocked'); },
-    checksPassed() { return normalized.filter((event) => event.category === 'check').every((event) => event.severity === 'success' || event.check?.passed === true); },
+    checksPassed() { return normalized.filter((event) => event.category === 'check').every(isCheckSuccessful); },
   };
 }
 
@@ -303,7 +334,7 @@ export function createReviewChecklist(events = []) {
   return [
     { id: 'commands-reviewed', label: 'Commands are understandable', passed: normalized.some((event) => event.category === 'command') },
     { id: 'files-reviewed', label: 'File changes are named', passed: normalized.some((event) => event.category === 'file_change') },
-    { id: 'checks-passed', label: 'Checks passed or failures are explained', passed: checks.length === 0 || checks.every((event) => event.severity === 'success' || event.check?.passed === true) },
+    { id: 'checks-passed', label: 'Checks passed or failures are explained', passed: checks.length === 0 || checks.every(isCheckSuccessful) },
     { id: 'approvals-visible', label: 'Approval requests are visible', passed: approvals.every((event) => event.severity === 'approval' || event.status) },
     { id: 'blockers-resolved', label: 'No unresolved blockers', passed: blockers.length === 0 },
     { id: 'completion-proof', label: 'Completion proof is present', passed: normalized.some((event) => event.category === 'completion_proof') },
@@ -313,7 +344,7 @@ export function createReviewChecklist(events = []) {
 export function createProofGate(events = [], options = {}) {
   const timeline = Array.isArray(events) ? createTimeline(events, options) : events;
   const normalized = timeline.events ?? [];
-  const failedChecks = normalized.filter((event) => event.category === 'check' && !(event.severity === 'success' || event.check?.passed === true));
+  const failedChecks = normalized.filter((event) => event.category === 'check' && !isCheckSuccessful(event));
   const blockers = normalized.filter((event) => event.category === 'blocker' || event.severity === 'blocked');
   const approvals = normalized.filter((event) => event.category === 'approval' && !['approved', 'completed', 'resolved'].includes(String(event.status ?? '').toLowerCase()));
   const missingCompletion = !normalized.some((event) => event.category === 'completion_proof');
