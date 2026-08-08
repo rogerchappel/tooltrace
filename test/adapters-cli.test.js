@@ -39,6 +39,20 @@ test('generic JSONL adapter maps commands, approvals, failures, browser actions,
   assert.deepEqual(events.map((event) => event.category), ['command', 'approval', 'tool', 'error', 'pr_commit', 'pr_commit', 'message']);
 });
 
+test('JSONL check evidence overrides a completed lifecycle status', () => {
+  const input = [
+    { timestamp: '2026-05-01T01:00:00Z', category: 'check', title: 'camel failure', status: 'completed', exitCode: 1 },
+    { timestamp: '2026-05-01T01:01:00Z', category: 'check', title: 'snake failure', status: 'completed', exit_code: 1 },
+    { timestamp: '2026-05-01T01:02:00Z', category: 'check', title: 'boolean failure', status: 'completed', passed: false },
+    { timestamp: '2026-05-01T01:03:00Z', category: 'check', title: 'zero exit', exit_code: 0 },
+    { timestamp: '2026-05-01T01:04:00Z', category: 'check', title: 'completed success', status: 'completed' },
+  ].map((event) => JSON.stringify(event)).join('\n');
+
+  const events = jsonlToToolTraceEvents(input);
+  assert.deepEqual(events.map((event) => event.severity), ['error', 'error', 'error', 'success', 'success']);
+  assert.deepEqual(events.map((event) => event.check?.exitCode), [1, 1, undefined, 0, undefined]);
+});
+
 test('AgentPulse adapter maps event types with source metadata', () => {
   const events = agentPulseToToolTraceEvents([
     { id: 'a', type: 'exec.completed', timestamp: '2026-05-01T01:00:00Z', payload: { command: 'npm test', status: 'passed' } },
@@ -126,6 +140,32 @@ test('CLI proof gate can fail builds on blocked runs', async () => {
 
   const json = await execFileAsync(process.execPath, ['src/cli.js', 'summary', input, '--format', 'json'], { cwd: new URL('..', import.meta.url) });
   assert.equal(JSON.parse(json.stdout).gate.counts.blockers, 1);
+});
+
+test('CLI exits 2 for completed checks with failed result evidence', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'tooltrace-check-gate-'));
+  const input = join(dir, 'failed-check.jsonl');
+  await writeFile(input, JSON.stringify({
+    timestamp: '2026-05-01T01:00:00Z',
+    category: 'check',
+    title: 'npm test',
+    status: 'completed',
+    exitCode: 1,
+  }));
+
+  for (const mode of ['failed-checks', 'any']) {
+    await assert.rejects(
+      execFileAsync(process.execPath, ['src/cli.js', 'summary', input, '--format', 'json', '--fail-on', mode], { cwd: new URL('..', import.meta.url) }),
+      (error) => {
+        const output = JSON.parse(error.stdout);
+        return error.code === 2
+          && output.events[0].severity === 'error'
+          && output.checklist.find((item) => item.id === 'checks-passed').passed === false
+          && output.gate.passed === false
+          && output.gate.counts.failedChecks === 1;
+      },
+    );
+  }
 });
 
 test('CLI rejects missing and option-like option values', async () => {

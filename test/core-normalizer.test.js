@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createProofSummary, createTimeline, normalizeEvents, redactText } from '../src/index.js';
+import { createProofGate, createProofSummary, createReviewChecklist, createTimeline, normalizeEvents, redactText } from '../src/index.js';
 
 const fixture = [
   { id: '2', timestamp: '2026-05-01T00:02:00Z', type: 'exec', command: 'npm test', exitCode: 0, status: 'passed', groupId: 'validate' },
@@ -60,4 +60,29 @@ test('generates concise proof summary', () => {
   assert.match(summary, /Files/);
   assert.match(summary, /Blockers/);
   assert.match(summary, /Completion/);
+});
+
+test('check result fields take deterministic precedence over lifecycle status', () => {
+  const checks = normalizeEvents([
+    { id: 'camel-failure', timestamp: '2026-05-01T00:00:00Z', category: 'check', title: 'camel failure', status: 'completed', exitCode: 1 },
+    { id: 'snake-failure', timestamp: '2026-05-01T00:01:00Z', category: 'check', title: 'snake failure', status: 'completed', exit_code: 2 },
+    { id: 'passed-false', timestamp: '2026-05-01T00:02:00Z', category: 'check', title: 'boolean failure', status: 'completed', passed: false },
+    { id: 'zero-exit', timestamp: '2026-05-01T00:03:00Z', category: 'check', title: 'zero exit', exit_code: 0 },
+    { id: 'completed', timestamp: '2026-05-01T00:04:00Z', category: 'check', title: 'completed', status: 'completed' },
+    { id: 'contradictory', timestamp: '2026-05-01T00:05:00Z', category: 'check', title: 'contradictory', status: 'failed', passed: true, exitCode: 0 },
+  ]);
+
+  assert.deepEqual(checks.map((event) => event.severity), ['error', 'error', 'error', 'success', 'success', 'error']);
+  assert.deepEqual(checks.map((event) => event.check?.exitCode), [1, 2, undefined, 0, undefined, 0]);
+  assert.equal(checks[2].check.passed, false);
+  assert.equal(createTimeline(checks).checksPassed(), false);
+  assert.equal(createReviewChecklist(checks).find((item) => item.id === 'checks-passed').passed, false);
+  assert.deepEqual(createProofGate(checks).counts, {
+    failedChecks: 4,
+    blockers: 0,
+    approvals: 0,
+    missingCompletion: 0,
+  });
+  assert.match(createProofSummary(checks, { includeGate: true }), /camel failure — error/);
+  assert.match(createProofSummary(checks, { includeGate: true }), /Gate:\*\* failed/);
 });
