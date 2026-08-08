@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { readFile, writeFile } from 'node:fs/promises';
-import { createProofGate, createProofSummary, createTimeline, jsonlToToolTraceEvents } from './index.js';
+import { createProofGate, createProofSummary, createReviewChecklist, createTimeline, jsonlToToolTraceEvents } from './index.js';
 
 function usage(exitCode = 0) {
   const stream = exitCode === 0 ? process.stdout : process.stderr;
@@ -75,8 +75,9 @@ async function main() {
   if (!['markdown', 'slack', 'json'].includes(format)) throw new Error(`Unsupported format: ${format}`);
   const timeline = createTimeline(events, { alreadyNormalized: true });
   const gate = createProofGate(timeline, { requireCompletion });
+  const checklist = createReviewChecklist(timeline);
   const output = command === 'summary' && format === 'json'
-    ? `${JSON.stringify({ ...timeline, gate }, null, 2)}\n`
+    ? `${JSON.stringify({ ...timeline, checklist, gate }, null, 2)}\n`
     : command === 'summary' ? createProofSummary(timeline, { format, includeGate: Boolean(failOn), requireCompletion }) : renderTimeline(events);
   if (out) await writeFile(out, output.endsWith('\n') ? output : `${output}\n`);
   else process.stdout.write(output.endsWith('\n') ? output : `${output}\n`);
