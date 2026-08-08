@@ -9,6 +9,8 @@ format and uses semantic versioning when versioned releases are published.
 
 ### Fixed
 
+- Check normalization and proof gates now honor `passed: false` and nonzero
+  `exitCode`/`exit_code` evidence even when lifecycle status is `completed`.
 - Restored the `tooltrace/react` entry point so its timeline, review checklist,
   and proof summary components can be imported and rendered from the package.
 
