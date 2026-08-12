@@ -32,6 +32,7 @@
     "build": "node -e \"await import('./src/index.js')\" && node src/cli.js --help >/dev/null",
     "smoke": "bash scripts/smoke.sh",
     "package:smoke": "node scripts/package-smoke.mjs .",
+    "release:contract": "node scripts/check-release-contract.mjs",
     "release:check": "npm run check && npm test && npm run build && npm run smoke && npm run package:smoke && npm pack --dry-run"
   },
   "keywords": [

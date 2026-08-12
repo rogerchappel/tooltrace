@@ -15,6 +15,7 @@ env:
 
 jobs:
   release:
+    environment: npm
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -30,6 +31,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Update npm for trusted publishing
+        run: npm install --global npm@latest
+
       - name: Install ReleaseBox
         run: |
           git clone --depth 1 --branch "$RELEASEBOX_REF" https://github.com/rogerchappel/releasebox.git "$RUNNER_TEMP/releasebox"
@@ -42,8 +46,26 @@ jobs:
       - name: Local release check
         run: npm run release:check
 
+      - name: Verify tag matches package version
+        run: test "${GITHUB_REF_NAME#v}" = "$(node -p "require('./package.json').version")"
+
       - name: Pack npm artifact
-        run: npm pack
+        id: pack
+        run: |
+          tarball=$(npm pack --json | node --input-type=module -e "let data=''; for await (const chunk of process.stdin) data += chunk; console.log(JSON.parse(data)[0].filename)")
+          echo "tarball=$tarball" >> "$GITHUB_OUTPUT"
+
+      - name: Publish verified npm artifact
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          if npm view "tooltrace@$version" version --json >/dev/null 2>&1; then
+            echo "tooltrace@$version already exists; continuing recovery verification"
+          else
+            npm publish "${{ steps.pack.outputs.tarball }}" --access public --provenance
+          fi
+
+      - name: Verify npm registry installation
+        run: node scripts/verify-published.mjs "${GITHUB_REF_NAME#v}"
 
       - name: Generate release notes
         run: node "$RUNNER_TEMP/releasebox/bin/releasebox.js" notes . > RELEASE_NOTES.md

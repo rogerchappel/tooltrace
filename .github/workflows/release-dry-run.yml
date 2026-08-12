@@ -7,6 +7,9 @@ on:
       - releasebox.config.json
       - package.json
       - package-lock.json
+      - scripts/check-release-contract.mjs
+      - scripts/verify-published.mjs
+      - test/release-contract.test.js
       - scripts/package-smoke.mjs
       - .github/workflows/release*.yml
 
@@ -41,6 +44,9 @@ jobs:
 
       - name: Local release check
         run: npm run release:check
+
+      - name: Publishing contract check
+        run: npm run release:contract
 
       - name: Release notes preview
         run: |
