@@ -106,6 +106,9 @@ npm run release:check
 `release:check` is the package release gate for check, tests, build, smoke, and
 package dry-run verification.
 
+Maintainers should follow the [npm release guide](docs/RELEASING.md) before
+pushing a version tag.
+
 ## Security
 
 ToolTrace is local-first and does not perform network calls in core. Use custom redaction patterns for application-specific sensitive data.
