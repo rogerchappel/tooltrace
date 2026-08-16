@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 
-test('release workflow preserves the trusted-publishing contract', () => {
+test('release metadata and workflow preserve the publishing contract', () => {
   const result = spawnSync(process.execPath, ['scripts/check-release-contract.mjs'], {
     cwd: process.cwd(),
     encoding: 'utf8',
