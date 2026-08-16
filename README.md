@@ -13,8 +13,11 @@ A local-first activity timeline and proof-of-work layer for agent apps. ToolTrac
 
 ## Install
 
+The npm package is not available yet. After a maintainer publishes the prepared
+v0.1.1 release, install that exact version with:
+
 ```sh
-npm install tooltrace
+npm install tooltrace@0.1.1
 ```
 
 React is an optional peer dependency for `tooltrace/react`. Import `tooltrace/styles.css` if you want the default dark review timeline styling.
