@@ -20,14 +20,18 @@ an OIDC token through `id-token: write`, installs a current npm CLI, and uses
 
 ## Release procedure
 
-1. Update `package.json` and `package-lock.json` to the intended version.
-2. Update `CHANGELOG.md` and merge the release commit to the default branch.
-3. Run `npm ci`, `npm run release:contract`, and `npm run release:check` locally.
-4. Create and push the matching `v<version>` tag.
-5. Confirm the workflow publishes to npm, verifies an exact-version install,
+1. Prepare a pull request that updates `package.json`, `package-lock.json`, and
+   `CHANGELOG.md` to the intended version. Do not create the tag or publish from
+   the preparation branch.
+2. Run `npm ci`, `npm run release:contract`, and `npm run release:check` locally,
+   then merge the reviewed release preparation.
+3. From the merged default branch, a maintainer creates and pushes the matching
+   `v<version>` tag. The tag-triggered workflow owns npm publication.
+4. Confirm the workflow publishes to npm, verifies an exact-version install,
    and creates the GitHub release with the same tarball.
-6. Confirm `npm view tooltrace@<version> version` and
-   `npm install tooltrace@<version>` resolve the released version.
+5. Confirm `npm view tooltrace@<version> version` reports the exact version, then
+   verify a clean consumer install with `npm install tooltrace@<version>` in a
+   new empty directory.
 
 ## Failure and recovery
 

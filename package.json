@@ -1,6 +1,6 @@
 {
   "name": "tooltrace",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Local-first proof-of-work timelines for agent apps.",
   "type": "module",
   "main": "./src/index.js",
