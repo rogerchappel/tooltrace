@@ -98,6 +98,8 @@ const STATUS_TO_SEVERITY = Object.freeze({
   pass: 'success',
   success: 'success',
   completed: 'success',
+  resolved: 'success',
+  approved: 'success',
   failed: 'error',
   fail: 'error',
   error: 'error',
@@ -152,6 +154,16 @@ function isCheckSuccessful(event) {
   if (['error', 'blocked'].includes(event.severity)) return false;
   if (event.check?.passed === true || (hasNumericExitCode && Number(exitCode) === 0)) return true;
   return event.severity === 'success';
+}
+
+const TERMINAL_REVIEW_STATUSES = new Set(['approved', 'completed', 'resolved']);
+
+function hasTerminalReviewStatus(event) {
+  return TERMINAL_REVIEW_STATUSES.has(String(event?.status ?? '').trim().toLowerCase());
+}
+
+function isUnresolvedBlocker(event) {
+  return event?.severity === 'blocked' || (event?.category === 'blocker' && !hasTerminalReviewStatus(event));
 }
 
 export function redactText(value, options = {}) {
@@ -292,7 +304,7 @@ export function createTimeline(events = [], options = {}) {
     groups: groupTimelineEvents(normalized, { ...options, alreadyNormalized: true }),
     counts: countTimelineEvents(normalized),
     byCategory(category) { return normalized.filter((event) => event.category === category); },
-    hasBlockers() { return normalized.some((event) => event.category === 'blocker' || event.severity === 'blocked'); },
+    hasBlockers() { return normalized.some(isUnresolvedBlocker); },
     checksPassed() { return normalized.filter((event) => event.category === 'check').every(isCheckSuccessful); },
   };
 }
@@ -319,7 +331,7 @@ export function countTimelineEvents(events = []) {
     if (event?.category in counts) counts[event.category] += 1;
   }
   counts.total = events.length;
-  counts.blocking = events.filter((event) => event.category === 'blocker' || event.severity === 'blocked').length;
+  counts.blocking = events.filter(isUnresolvedBlocker).length;
   counts.needsApproval = events.filter((event) => event.category === 'approval' || event.severity === 'approval').length;
   return counts;
 }
@@ -329,7 +341,7 @@ export function createReviewChecklist(events = []) {
   const timeline = Array.isArray(events) ? createTimeline(events) : events;
   const normalized = timeline.events ?? [];
   const checks = normalized.filter((event) => event.category === 'check');
-  const blockers = normalized.filter((event) => event.category === 'blocker' || event.severity === 'blocked');
+  const blockers = normalized.filter(isUnresolvedBlocker);
   const approvals = normalized.filter((event) => event.category === 'approval');
   return [
     { id: 'commands-reviewed', label: 'Commands are understandable', passed: normalized.some((event) => event.category === 'command') },
@@ -345,8 +357,8 @@ export function createProofGate(events = [], options = {}) {
   const timeline = Array.isArray(events) ? createTimeline(events, options) : events;
   const normalized = timeline.events ?? [];
   const failedChecks = normalized.filter((event) => event.category === 'check' && !isCheckSuccessful(event));
-  const blockers = normalized.filter((event) => event.category === 'blocker' || event.severity === 'blocked');
-  const approvals = normalized.filter((event) => event.category === 'approval' && !['approved', 'completed', 'resolved'].includes(String(event.status ?? '').toLowerCase()));
+  const blockers = normalized.filter(isUnresolvedBlocker);
+  const approvals = normalized.filter((event) => event.category === 'approval' && !hasTerminalReviewStatus(event));
   const missingCompletion = !normalized.some((event) => event.category === 'completion_proof');
   const failures = [
     ...failedChecks.map((event) => ({ id: event.id, reason: 'failed-check', title: event.title })),
@@ -385,7 +397,7 @@ export function createProofSummary(events = [], options = {}) {
   add('Checks', normalized.filter((e) => e.category === 'check').map((e) => `${e.title} — ${e.severity}`));
   add('PRs/commits', normalized.filter((e) => e.category === 'pr_commit').map((e) => e.title));
   add('Approvals', normalized.filter((e) => e.category === 'approval').map((e) => e.title));
-  add('Blockers', normalized.filter((e) => e.category === 'blocker').map((e) => e.title));
+  add('Blockers', normalized.filter(isUnresolvedBlocker).map((e) => e.title));
   add('Completion', normalized.filter((e) => e.category === 'completion_proof').map((e) => e.title));
   const redactionCount = normalized.reduce((sum, e) => sum + (e.redactions?.length ?? 0), 0);
   if (redactionCount) bullets.push(`- **Redactions:** ${redactionCount} sensitive/noisy field(s) hidden`);
