@@ -142,6 +142,28 @@ test('CLI proof gate can fail builds on blocked runs', async () => {
   assert.equal(JSON.parse(json.stdout).gate.counts.blockers, 1);
 });
 
+test('CLI --fail-on blockers and any accept resolved blockers but reject unresolved blockers', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'tooltrace-resolved-blocker-'));
+  const resolved = join(dir, 'resolved.jsonl');
+  const unresolved = join(dir, 'unresolved.jsonl');
+  await writeFile(resolved, JSON.stringify({ timestamp: '2026-05-01T01:00:00Z', type: 'blocker', title: 'Fixture restored', status: 'resolved' }));
+  await writeFile(unresolved, JSON.stringify({ timestamp: '2026-05-01T01:00:00Z', type: 'blocker', title: 'Fixture missing' }));
+  const cwd = new URL('..', import.meta.url);
+
+  for (const mode of ['blockers', 'any']) {
+    const result = await execFileAsync(process.execPath, ['src/cli.js', 'summary', resolved, '--format', 'json', '--fail-on', mode], { cwd });
+    const output = JSON.parse(result.stdout);
+    assert.equal(output.counts.blocking, 0);
+    assert.equal(output.gate.counts.blockers, 0);
+    assert.equal(output.gate.passed, true);
+
+    await assert.rejects(
+      execFileAsync(process.execPath, ['src/cli.js', 'summary', unresolved, '--format', 'json', '--fail-on', mode], { cwd }),
+      (error) => error.code === 2 && JSON.parse(error.stdout).gate.counts.blockers === 1,
+    );
+  }
+});
+
 test('CLI exits 2 for completed checks with failed result evidence', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'tooltrace-check-gate-'));
   const input = join(dir, 'failed-check.jsonl');
