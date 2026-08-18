@@ -7,6 +7,11 @@ format and uses semantic versioning when versioned releases are published.
 
 ## [Unreleased]
 
+### Fixed
+
+- Resolved, completed, and approved blocker events no longer count as active
+  blockers or fail proof gates, checklists, and CLI blocker modes.
+
 ## [0.1.1] - 2026-08-16
 
 ### Fixed

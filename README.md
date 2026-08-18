@@ -67,6 +67,10 @@ appear before or after the input file. Value-bearing options require an explicit
 or command-inapplicable options exit with status 1. A triggered proof gate exits with status 2.
 Use `--fail-on blockers`, `--fail-on approvals`, `--fail-on failed-checks`, or `--fail-on any` in CI or review scripts when unresolved proof should stop the lane. Add `--require-completion` when the run must include an explicit completion proof event.
 
+A blocker is unresolved when its status is missing or non-terminal. Blocker events marked
+`resolved`, `completed`, or `approved` no longer fail blocker gates. An event with explicit
+`severity: "blocked"` always remains blocking, regardless of status.
+
 ## Adapters
 
 ```js
