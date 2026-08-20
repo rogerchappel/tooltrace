@@ -21,7 +21,7 @@
   "release": {
     "mode": "reviewed",
     "createGithubRelease": true,
-    "publishNpm": false,
+    "publishNpm": true,
     "updateHomebrew": false
   }
 }
