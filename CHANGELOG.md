@@ -14,6 +14,9 @@ format and uses semantic versioning when versioned releases are published.
 
 ## [0.1.1] - 2026-08-16
 
+Prepared for publication; this version is not yet available from npm or as a
+GitHub release.
+
 ### Fixed
 
 - Check normalization and proof gates now honor `passed: false` and nonzero
@@ -27,6 +30,6 @@ format and uses semantic versioning when versioned releases are published.
 
 - Initial project setup.
 
-[Unreleased]: https://github.com/rogerchappel/tooltrace/compare/v0.1.1...HEAD
-[0.1.1]: https://github.com/rogerchappel/tooltrace/compare/v0.1.0...v0.1.1
+[Unreleased]: https://github.com/rogerchappel/tooltrace/compare/v0.1.0...HEAD
+[0.1.1]: https://github.com/rogerchappel/tooltrace/compare/v0.1.0...HEAD
 [0.1.0]: https://github.com/rogerchappel/tooltrace/releases/tag/v0.1.0
