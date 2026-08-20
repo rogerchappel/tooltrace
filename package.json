@@ -33,7 +33,7 @@
     "smoke": "bash scripts/smoke.sh",
     "package:smoke": "node scripts/package-smoke.mjs .",
     "release:contract": "node scripts/check-release-contract.mjs",
-    "release:check": "npm run check && npm test && npm run build && npm run smoke && npm run package:smoke && npm pack --dry-run"
+    "release:check": "npm run release:contract && npm run check && npm test && npm run build && npm run smoke && npm run package:smoke && npm pack --dry-run"
   },
   "keywords": [
     "activity-feed",
