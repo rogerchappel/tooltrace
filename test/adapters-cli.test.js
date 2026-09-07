@@ -142,6 +142,35 @@ test('CLI proof gate can fail builds on blocked runs', async () => {
   assert.equal(JSON.parse(json.stdout).gate.counts.blockers, 1);
 });
 
+test('CLI --require-completion rejects non-success completion states', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'tooltrace-completion-gate-'));
+  const cwd = new URL('..', import.meta.url);
+
+  for (const status of ['pending', 'failed', 'blocked', 'error']) {
+    const input = join(dir, `${status}.jsonl`);
+    await writeFile(input, JSON.stringify({ type: 'complete', title: `Run ${status}`, status }));
+    await assert.rejects(
+      execFileAsync(process.execPath, ['src/cli.js', 'summary', input, '--format', 'json', '--require-completion', '--fail-on', 'any'], { cwd }),
+      (error) => {
+        const output = JSON.parse(error.stdout);
+        return error.code === 2
+          && output.gate.passed === false
+          && output.gate.counts.missingCompletion === 1
+          && output.gate.counts.invalidCompletion === 1
+          && output.checklist.find((item) => item.id === 'completion-proof').passed === false;
+      },
+    );
+  }
+
+  for (const status of [undefined, 'completed', 'success']) {
+    const input = join(dir, `${status ?? 'default'}.jsonl`);
+    await writeFile(input, JSON.stringify({ type: 'complete', title: 'Run completed', ...(status ? { status } : {}) }));
+    const result = await execFileAsync(process.execPath, ['src/cli.js', 'summary', input, '--format', 'json', '--require-completion', '--fail-on', 'any'], { cwd });
+    assert.equal(result.child?.exitCode, undefined);
+    assert.equal(JSON.parse(result.stdout).gate.passed, true);
+  }
+});
+
 test('CLI --fail-on blockers and any accept resolved blockers but reject unresolved blockers', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'tooltrace-resolved-blocker-'));
   const resolved = join(dir, 'resolved.jsonl');

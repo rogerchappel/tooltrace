@@ -85,5 +85,33 @@ test('proof gate fails unresolved blockers, approvals, failed checks, and missin
     blockers: 1,
     approvals: 1,
     missingCompletion: 1,
+    invalidCompletion: 0,
   });
+});
+
+test('completion proof requires an accepted terminal-success status and severity', () => {
+  for (const status of ['passed', 'pass', 'success', 'completed', 'resolved', 'approved']) {
+    const events = [{ type: 'complete', title: `Finished: ${status}`, status }];
+    assert.equal(createProofGate(events, { requireCompletion: true }).passed, true, status);
+    assert.equal(createReviewChecklist(events).find((item) => item.id === 'completion-proof').passed, true, status);
+  }
+
+  const omitted = [{ type: 'complete', title: 'Finished with defaults' }];
+  assert.equal(createProofGate(omitted, { requireCompletion: true }).passed, true);
+
+  for (const [status, severity] of [
+    ['pending', undefined],
+    ['failed', undefined],
+    ['blocked', undefined],
+    ['error', undefined],
+    ['completed', 'error'],
+  ]) {
+    const events = [{ type: 'complete', title: `Not finished: ${status}`, status, severity }];
+    const gate = createProofGate(events, { requireCompletion: true });
+    assert.equal(gate.passed, false, `${status}/${severity ?? 'default'}`);
+    assert.equal(gate.counts.missingCompletion, 1);
+    assert.equal(gate.counts.invalidCompletion, 1);
+    assert.equal(gate.failures.at(-1).reason, 'invalid-completion-proof');
+    assert.equal(createReviewChecklist(events).find((item) => item.id === 'completion-proof').passed, false);
+  }
 });
