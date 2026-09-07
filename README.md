@@ -70,7 +70,7 @@ timestamp field and value in the diagnostic.
 `--require-completion`, and `--out <path>`. `render` accepts only `--out <path>`. Options may
 appear before or after the input file. Value-bearing options require an explicit operand; malformed
 or command-inapplicable options exit with status 1. A triggered proof gate exits with status 2.
-Use `--fail-on blockers`, `--fail-on approvals`, `--fail-on failed-checks`, or `--fail-on any` in CI or review scripts when unresolved proof should stop the lane. Add `--require-completion` when the run must include an explicit completion proof event.
+Use `--fail-on blockers`, `--fail-on approvals`, `--fail-on failed-checks`, or `--fail-on any` in CI or review scripts when unresolved proof should stop the lane. Add `--require-completion` when the run must include a successful completion proof event. A JSONL `completion_proof` (or `type: "complete"`) counts only when its status is `passed`, `pass`, `success`, `completed`, `resolved`, or `approved` and its normalized severity is `success`. An omitted completion status defaults to `completed`; pending, failed, error, blocked, and explicitly non-success-severity completion events are reported as invalid rather than satisfying the gate.
 
 A blocker is unresolved when its status is missing or non-terminal. Blocker events marked
 `resolved`, `completed`, or `approved` no longer fail blocker gates. An event with explicit
