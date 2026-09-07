@@ -36,7 +36,13 @@ tooltrace: Invalid JSONL event at line 4: Invalid timestamp value "not-a-date"
 
 ## Proof gates
 
-`tooltrace summary run.jsonl --fail-on any --require-completion` exits with status `2` when unresolved proof remains. Gate failures include failed `check` events, `blocker` events, unresolved `approval` events, and missing completion proof when requested.
+`tooltrace summary run.jsonl --fail-on any --require-completion` exits with status `2` when unresolved proof remains. Gate failures include failed `check` events, `blocker` events, unresolved `approval` events, and missing or invalid completion proof when requested.
+
+A completion proof is valid only with normalized `severity: "success"` and a terminal-success
+status: `passed`, `pass`, `success`, `completed`, `resolved`, or `approved`. When status is omitted,
+completion proof defaults to `completed`. Pending, failed, error, blocked, and explicitly
+non-success-severity completion events remain visible in the timeline but do not satisfy the gate or
+review checklist.
 
 Check fields have deterministic precedence when producers send contradictory evidence:
 
