@@ -82,6 +82,7 @@ test('check result fields take deterministic precedence over lifecycle status', 
     blockers: 0,
     approvals: 0,
     missingCompletion: 0,
+    invalidCompletion: 0,
   });
   assert.match(createProofSummary(checks, { includeGate: true }), /camel failure — error/);
   assert.match(createProofSummary(checks, { includeGate: true }), /Gate:\*\* failed/);

@@ -9,6 +9,8 @@ format and uses semantic versioning when versioned releases are published.
 
 ### Fixed
 
+- Completion gates and review checklists now require terminal-success completion
+  proof instead of accepting pending, failed, error, or blocked completion events.
 - Resolved, completed, and approved blocker events no longer count as active
   blockers or fail proof gates, checklists, and CLI blocker modes.
 

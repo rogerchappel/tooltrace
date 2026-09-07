@@ -4,7 +4,7 @@ import { createProofGate, createProofSummary, createReviewChecklist, createTimel
 
 function usage(exitCode = 0) {
   const stream = exitCode === 0 ? process.stdout : process.stderr;
-  stream.write(`tooltrace — render readable proof from JSONL\n\nUsage:\n  tooltrace summary <file.jsonl> [--format markdown|slack|json] [--fail-on blockers|approvals|failed-checks|any]\n  tooltrace render <file.jsonl> [--out TOOLTRACE.md]\n\nOptions:\n  --out <path>          Write markdown output to a file instead of stdout\n  --format <format>     Summary format: markdown, slack, or json\n  --fail-on <mode>      Exit non-zero when proof contains blockers, approvals, failed checks, or any gate failure\n  --require-completion  Treat missing completion proof as a gate failure\n  --help               Show this help\n`);
+  stream.write(`tooltrace — render readable proof from JSONL\n\nUsage:\n  tooltrace summary <file.jsonl> [--format markdown|slack|json] [--fail-on blockers|approvals|failed-checks|any]\n  tooltrace render <file.jsonl> [--out TOOLTRACE.md]\n\nOptions:\n  --out <path>          Write markdown output to a file instead of stdout\n  --format <format>     Summary format: markdown, slack, or json\n  --fail-on <mode>      Exit non-zero when proof contains blockers, approvals, failed checks, or any gate failure\n  --require-completion  Require completion proof with terminal-success status and severity\n  --help               Show this help\n`);
   process.exit(exitCode);
 }
 
