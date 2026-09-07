@@ -157,9 +157,16 @@ function isCheckSuccessful(event) {
 }
 
 const TERMINAL_REVIEW_STATUSES = new Set(['approved', 'completed', 'resolved']);
+const TERMINAL_SUCCESS_STATUSES = new Set(['approved', 'completed', 'resolved', 'passed', 'pass', 'success']);
 
 function hasTerminalReviewStatus(event) {
   return TERMINAL_REVIEW_STATUSES.has(String(event?.status ?? '').trim().toLowerCase());
+}
+
+function isSuccessfulCompletionProof(event) {
+  return event?.category === 'completion_proof'
+    && event.severity === 'success'
+    && TERMINAL_SUCCESS_STATUSES.has(String(event.status ?? '').trim().toLowerCase());
 }
 
 function isUnresolvedBlocker(event) {
@@ -349,7 +356,7 @@ export function createReviewChecklist(events = []) {
     { id: 'checks-passed', label: 'Checks passed or failures are explained', passed: checks.length === 0 || checks.every(isCheckSuccessful) },
     { id: 'approvals-visible', label: 'Approval requests are visible', passed: approvals.every((event) => event.severity === 'approval' || event.status) },
     { id: 'blockers-resolved', label: 'No unresolved blockers', passed: blockers.length === 0 },
-    { id: 'completion-proof', label: 'Completion proof is present', passed: normalized.some((event) => event.category === 'completion_proof') },
+    { id: 'completion-proof', label: 'Successful completion proof is present', passed: normalized.some(isSuccessfulCompletionProof) },
   ];
 }
 
@@ -359,12 +366,18 @@ export function createProofGate(events = [], options = {}) {
   const failedChecks = normalized.filter((event) => event.category === 'check' && !isCheckSuccessful(event));
   const blockers = normalized.filter(isUnresolvedBlocker);
   const approvals = normalized.filter((event) => event.category === 'approval' && !hasTerminalReviewStatus(event));
-  const missingCompletion = !normalized.some((event) => event.category === 'completion_proof');
+  const completionProofs = normalized.filter((event) => event.category === 'completion_proof');
+  const invalidCompletion = completionProofs.filter((event) => !isSuccessfulCompletionProof(event));
+  const missingCompletion = !completionProofs.some(isSuccessfulCompletionProof);
   const failures = [
     ...failedChecks.map((event) => ({ id: event.id, reason: 'failed-check', title: event.title })),
     ...blockers.map((event) => ({ id: event.id, reason: 'blocker', title: event.title })),
     ...approvals.map((event) => ({ id: event.id, reason: 'approval', title: event.title })),
-    ...(missingCompletion && options.requireCompletion ? [{ id: 'completion-proof', reason: 'missing-completion-proof', title: 'Completion proof is required' }] : []),
+    ...(missingCompletion && options.requireCompletion ? [{
+      id: invalidCompletion[0]?.id ?? 'completion-proof',
+      reason: invalidCompletion.length ? 'invalid-completion-proof' : 'missing-completion-proof',
+      title: invalidCompletion.length ? 'Completion proof must report terminal success' : 'Completion proof is required',
+    }] : []),
   ];
   return {
     passed: failures.length === 0,
@@ -374,6 +387,7 @@ export function createProofGate(events = [], options = {}) {
       blockers: blockers.length,
       approvals: approvals.length,
       missingCompletion: missingCompletion && options.requireCompletion ? 1 : 0,
+      invalidCompletion: invalidCompletion.length,
     },
   };
 }
