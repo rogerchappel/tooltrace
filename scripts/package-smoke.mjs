@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { mkdir, mkdtemp, rm, readdir, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, rm, readdir, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -36,6 +36,14 @@ try {
 
   run('npm', ['init', '-y'], { cwd: appRoot });
   run('npm', ['install', '--ignore-scripts', join(tempRoot, tarballs[0]), 'react@18', 'react-dom@18'], { cwd: appRoot });
+
+  const packedManifest = JSON.parse(await readFile(join(appRoot, 'node_modules', 'tooltrace', 'package.json'), 'utf8'));
+  if (packedManifest.sideEffects === false) {
+    throw new Error('packed manifest declares "sideEffects": false, which strips tooltrace/styles.css from bundler consumers');
+  }
+  if (Array.isArray(packedManifest.sideEffects) && !packedManifest.sideEffects.some((pattern) => String(pattern).endsWith('.css'))) {
+    throw new Error(`packed manifest sideEffects list does not keep CSS files: ${JSON.stringify(packedManifest.sideEffects)}`);
+  }
 
   await writeFile(join(appRoot, 'sample.jsonl'), `${JSON.stringify({ event: 'start', title: 'Package smoke' })}\n`);
   run('npx', ['tooltrace', 'summary', 'sample.jsonl'], { cwd: appRoot });
