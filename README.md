@@ -25,7 +25,7 @@ After v0.1.1 appears in both the [npm registry](https://www.npmjs.com/package/to
 and [GitHub releases](https://github.com/rogerchappel/tooltrace/releases), use
 `npm install tooltrace@0.1.1`.
 
-React is an optional peer dependency for `tooltrace/react`. Import `tooltrace/styles.css` if you want the default dark review timeline styling.
+React is an optional peer dependency for `tooltrace/react`. Import `tooltrace/styles.css` if you want the default dark review timeline styling; the package manifest marks `*.css` as side-effect-full, so bundlers such as webpack keep that import.
 
 ## Core usage
 
