@@ -9,6 +9,11 @@ format and uses semantic versioning when versioned releases are published.
 
 ### Fixed
 
+- `package.json` no longer declares `"sideEffects": false`; the manifest now marks
+  `*.css` as side-effect-full so bundlers (webpack and friends) keep
+  `import 'tooltrace/styles.css'` instead of silently shipping an unstyled timeline.
+  Regression assertions in `npm run check`, `npm test`, and `npm run package:smoke`
+  guard the manifest.
 - Completion gates and review checklists now require terminal-success completion
   proof instead of accepting pending, failed, error, or blocked completion events.
 - Resolved, completed, and approved blocker events no longer count as active
