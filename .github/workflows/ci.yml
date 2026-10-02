@@ -52,11 +52,12 @@ jobs:
         run: |
           set -euo pipefail
 
-          if [ -f package-lock.json ]; then
-            npm ci
-          else
-            npm install
+          if [ ! -f package-lock.json ]; then
+            echo "package-lock.json is required for reproducible CI installs." >&2
+            exit 1
           fi
+
+          npm ci
 
           npm run check --if-present
           npm test --if-present
